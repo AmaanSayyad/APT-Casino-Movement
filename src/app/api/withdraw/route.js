@@ -256,10 +256,12 @@ export async function POST(request) {
       });
       
       // Build transfer transaction with enhanced gas settings
+      // Use coin::transfer for Movement network (same as deposit)
       transaction = await movement.transaction.build.simple({
         sender: treasuryAccount.accountAddress,
         data: {
-          function: "0x1::aptos_account::transfer",
+          function: "0x1::coin::transfer",
+          typeArguments: ["0x1::aptos_coin::AptosCoin"], // Movement uses AptosCoin type
           functionArguments: [
             playerAddress, // recipient
             amountOctas,   // amount in octas
