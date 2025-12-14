@@ -15,6 +15,7 @@ import { useSelector, useDispatch } from 'react-redux';
 import { setBalance, setLoading, loadBalanceFromStorage } from '@/store/balanceSlice';
 import { useNotification } from '@/components/NotificationSystem';
 import { useGameLogger } from '@/hooks/useGameLogger';
+import { useMovementGameLogger } from '@/hooks/useMovementGameLogger';
 import { useWallet } from '@aptos-labs/wallet-adapter-react';
 
 // Import new components
@@ -48,6 +49,7 @@ export default function Home() {
   const { userBalance, isLoading: isLoadingBalance } = useSelector((state) => state.balance);
   const notification = useNotification();
   const { logGame } = useGameLogger();
+  const { logGame: logMovementGame } = useMovementGameLogger();
   const { account } = useWallet();
   
   // Use ref to prevent infinite loop in useEffect
@@ -143,6 +145,9 @@ export default function Home() {
           
           const winAmount = betAmount * actualMultiplier;
           
+          // Generate random seed for entropy (timestamp + random for uniqueness)
+          const randomSeed = BigInt(Date.now() * 1000 + Math.floor(Math.random() * 1000));
+          
           // Add to game history
           const newHistoryItem = {
             id: Date.now(),
@@ -153,14 +158,15 @@ export default function Home() {
             payout: winAmount.toFixed(5),
             result: 0,
             color: detectedColor,
-            txHash: null
+            txHash: null,
+            entropyProof: null, // Will be populated when Pyth entropy is integrated
+            movementTxHash: null,
+            movementTxStatus: 'none'
           };
-
-         
 
           setGameHistory(prev => [newHistoryItem, ...prev]);
           
-          // Log game to blockchain
+          // Log game to blockchain (existing system)
           if (account?.address) {
             const gameResult = `${risk}_${noOfSegments}segments_${actualMultiplier.toFixed(2)}x_${detectedColor}`;
             logGame({
@@ -180,6 +186,76 @@ export default function Home() {
               }
             }).catch(error => {
               console.error('Failed to log wheel game:', error);
+            });
+          }
+          
+          // Log game to Movement blockchain
+          if (account?.address) {
+            console.log('🎯 Logging Wheel game to Movement blockchain...');
+            
+            // Update history to show pending status
+            setGameHistory(prev => {
+              if (prev.length === 0) return prev;
+              const [first, ...rest] = prev;
+              const updatedFirst = { ...first, movementTxStatus: 'pending' };
+              return [updatedFirst, ...rest];
+            });
+            
+            const gameResult = `${risk}_${noOfSegments}segments_${actualMultiplier.toFixed(2)}x_${detectedColor}`;
+            const betAmountOctas = BigInt(Math.floor(betAmount * 100000000)); // Convert to octas
+            const payoutOctas = BigInt(Math.floor(winAmount * 100000000)); // Convert to octas
+            
+            logMovementGame({
+              gameType: 'wheel',
+              playerAddress: account.address,
+              betAmount: betAmountOctas,
+              result: gameResult,
+              payout: payoutOctas,
+              randomSeed: randomSeed,
+            }).then(res => {
+              if (res?.success) {
+                console.log('✅ Wheel game successfully logged to Movement blockchain');
+                console.log('├── Transaction Hash:', res.transactionHash);
+                console.log('├── Explorer URL:', res.explorerUrl);
+                console.log('├── Random Seed:', randomSeed.toString());
+                console.log('├── Game Result:', gameResult);
+                console.log('├── Risk Level:', risk);
+                console.log('├── Segments:', noOfSegments);
+                console.log('├── Multiplier:', actualMultiplier.toFixed(2));
+                console.log('└── Color:', detectedColor);
+                
+                // Update history with successful Movement transaction
+                setGameHistory(prev => {
+                  if (prev.length === 0) return prev;
+                  const [first, ...rest] = prev;
+                  const updatedFirst = { 
+                    ...first, 
+                    movementTxHash: res.transactionHash || null, 
+                    movementTxStatus: 'confirmed' 
+                  };
+                  return [updatedFirst, ...rest];
+                });
+              } else {
+                console.error('❌ Failed to log Wheel game to Movement:', res.error);
+                
+                // Update history to show failed status
+                setGameHistory(prev => {
+                  if (prev.length === 0) return prev;
+                  const [first, ...rest] = prev;
+                  const updatedFirst = { ...first, movementTxStatus: 'failed' };
+                  return [updatedFirst, ...rest];
+                });
+              }
+            }).catch(error => {
+              console.error('❌ Error logging Wheel game to Movement blockchain:', error);
+              
+              // Update history to show failed status
+              setGameHistory(prev => {
+                if (prev.length === 0) return prev;
+                const [first, ...rest] = prev;
+                const updatedFirst = { ...first, movementTxStatus: 'failed' };
+                return [updatedFirst, ...rest];
+              });
             });
           }
 
@@ -359,6 +435,9 @@ export default function Home() {
         notification.success(`Congratulations! ${currentBet} APT × ${actualMultiplier.toFixed(2)} = ${winAmount.toFixed(8)} APT won!`);
       }
 
+      // Generate random seed for entropy (timestamp + random for uniqueness)
+      const randomSeed = BigInt(Date.now() * 1000 + Math.floor(Math.random() * 1000));
+      
       // Store history entry
       const newHistoryItem = {
         id: Date.now() + i, // unique id per bet
@@ -368,12 +447,80 @@ export default function Home() {
         multiplier: `${actualMultiplier.toFixed(2)}x`,
         payout: winAmount,
         result: resultPosition,
-        color: wheelSegmentData.color
+        color: wheelSegmentData.color,
+        entropyProof: null, // Will be populated when Pyth entropy is integrated
+        movementTxHash: null,
+        movementTxStatus: 'none'
       };
 
-     
-
       setGameHistory(prev => [newHistoryItem, ...prev]);
+      
+      // Log game to Movement blockchain (for auto betting)
+      if (account?.address) {
+        console.log(`🎯 Logging Wheel auto-bet ${i + 1} to Movement blockchain...`);
+        
+        // Update history to show pending status
+        setGameHistory(prev => {
+          if (prev.length === 0) return prev;
+          const [first, ...rest] = prev;
+          const updatedFirst = { ...first, movementTxStatus: 'pending' };
+          return [updatedFirst, ...rest];
+        });
+        
+        const gameResult = `${risk}_${noOfSegments}segments_${actualMultiplier.toFixed(2)}x_${wheelSegmentData.color}`;
+        const betAmountOctas = BigInt(Math.floor(currentBet * 100000000)); // Convert to octas
+        const payoutOctas = BigInt(Math.floor(winAmount * 100000000)); // Convert to octas
+        
+        try {
+          const res = await logMovementGame({
+            gameType: 'wheel',
+            playerAddress: account.address,
+            betAmount: betAmountOctas,
+            result: gameResult,
+            payout: payoutOctas,
+            randomSeed: randomSeed,
+          });
+          
+          if (res?.success) {
+            console.log(`✅ Wheel auto-bet ${i + 1} successfully logged to Movement blockchain`);
+            console.log('├── Transaction Hash:', res.transactionHash);
+            console.log('├── Random Seed:', randomSeed.toString());
+            console.log('└── Game Result:', gameResult);
+            
+            // Update history with successful Movement transaction
+            setGameHistory(prev => {
+              if (prev.length === 0) return prev;
+              const [first, ...rest] = prev;
+              const updatedFirst = { 
+                ...first, 
+                movementTxHash: res.transactionHash || null, 
+                movementTxStatus: 'confirmed' 
+              };
+              return [updatedFirst, ...rest];
+            });
+          } else {
+            console.error(`❌ Failed to log Wheel auto-bet ${i + 1} to Movement:`, res.error);
+            
+            // Update history to show failed status
+            setGameHistory(prev => {
+              if (prev.length === 0) return prev;
+              const [first, ...rest] = prev;
+              const updatedFirst = { ...first, movementTxStatus: 'failed' };
+              return [updatedFirst, ...rest];
+            });
+          }
+        } catch (error) {
+          console.error(`❌ Error logging Wheel auto-bet ${i + 1} to Movement blockchain:`, error);
+          
+          // Update history to show failed status
+          setGameHistory(prev => {
+            if (prev.length === 0) return prev;
+            const [first, ...rest] = prev;
+            const updatedFirst = { ...first, movementTxStatus: 'failed' };
+            return [updatedFirst, ...rest];
+          });
+        }
+      }
 
       // Adjust bet for next round based on win/loss increase
       if (actualMultiplier > 1) {

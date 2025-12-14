@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { FaHistory, FaStar, FaTrophy, FaChartBar, FaChartLine, FaBomb, FaSort, FaSortUp, FaSortDown } from "react-icons/fa";
 import { GiMining, GiDiamonds, GiTreasureMap, GiGoldBar, GiDiamondHard, GiDiamondTrophy } from "react-icons/gi";
 import { HiClock, HiOutlineLightningBolt } from "react-icons/hi";
+import MovementTxLink from "@/components/MovementTxLink";
 
 const MinesHistory = ({ gameHistory = [], userStats = {} }) => {
   // State for sorting
@@ -185,7 +186,7 @@ const MinesHistory = ({ gameHistory = [], userStats = {} }) => {
       {/* Game History - Enhanced Table */}
       <div className="bg-black/20 rounded-xl border border-purple-800/20 p-4 shadow-inner">
         {/* Header */}
-        <div className="grid grid-cols-7 gap-2 pb-3 text-xs font-medium border-b border-purple-800/30 px-2">
+        <div className="grid grid-cols-8 gap-2 pb-3 text-xs font-medium border-b border-purple-800/30 px-2">
           <div 
             className="flex items-center cursor-pointer hover:text-white/90 transition-colors text-white/70"
             onClick={() => handleSort('id')}
@@ -222,7 +223,8 @@ const MinesHistory = ({ gameHistory = [], userStats = {} }) => {
           >
             Time <SortIcon field="time" />
           </div>
-          <div className="text-white/70">TX</div>
+          <div className="text-white/70">Entropy</div>
+          <div className="text-white/70">Movement</div>
         </div>
         
         {/* History Items */}
@@ -241,7 +243,7 @@ const MinesHistory = ({ gameHistory = [], userStats = {} }) => {
                 boxShadow: "0 8px 20px rgba(0, 0, 0, 0.2)",
                 y: -2
               }}
-              className={`grid grid-cols-7 gap-2 p-3 text-xs rounded-lg transition-all ${
+              className={`grid grid-cols-8 gap-2 p-3 text-xs rounded-lg transition-all ${
                 game.outcome === 'win' 
                   ? 'bg-gradient-to-r from-green-900/20 to-green-800/5 border border-green-800/30' 
                   : 'bg-gradient-to-r from-red-900/20 to-red-800/5 border border-red-800/30'
@@ -288,18 +290,25 @@ const MinesHistory = ({ gameHistory = [], userStats = {} }) => {
                 <span>{game.time}</span>
               </div>
               <div className="flex items-center">
-                {game.txHash ? (
+                {game.entropyProof ? (
                   <a
-                    href={`https://explorer.aptoslabs.com/txn/${game.txHash}?network=testnet`}
+                    href={game.entropyProof}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-blue-400 hover:text-blue-300 underline"
+                    className="text-blue-400 hover:text-blue-300 underline text-xs"
+                    title="View Pyth Entropy Proof"
                   >
-                    {game.txHash.slice(0, 6)}...{game.txHash.slice(-4)}
+                    Entropy
                   </a>
                 ) : (
-                  <span className="text-gray-500">pending</span>
+                  <span className="text-gray-500 text-xs">N/A</span>
                 )}
+              </div>
+              <div className="flex items-center justify-center">
+                <MovementTxLink
+                  transactionHash={game.movementTxHash}
+                  isPending={game.movementTxStatus === 'pending'}
+                />
               </div>
             </motion.div>
           ))}

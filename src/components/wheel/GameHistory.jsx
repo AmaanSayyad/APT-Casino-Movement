@@ -4,6 +4,7 @@ import { useState } from "react";
 import { cn } from "@/lib/utils";
 import Image from "next/image";
 import coin from "../../../public/coin.png";
+import MovementTxLink from "@/components/MovementTxLink";
 
 const GameHistory = ({ gameHistory }) => {
   const [activeTab, setActiveTab] = useState("my-bet");
@@ -65,7 +66,8 @@ const GameHistory = ({ gameHistory }) => {
                 <th className="py-6 px-4 font-medium">Bet amount</th>
                 <th className="py-6 px-4 font-medium">Multiplier</th>
                 <th className="py-6 px-4 font-medium">Payout</th>
-                <th className="py-6 px-4 font-medium">TX</th>
+                <th className="py-6 px-4 font-medium">Entropy</th>
+                <th className="py-6 px-4 font-medium">Movement</th>
               </tr>
             </thead>
             <tbody>
@@ -103,24 +105,33 @@ const GameHistory = ({ gameHistory }) => {
                       </span>
                     </td>
                     <td className="py-6 px-4">
-                      {item.txHash ? (
+                      {item.entropyProof ? (
                         <a 
-                          href={`https://explorer.aptoslabs.com/txn/${item.txHash}`}
+                          href={item.entropyProof}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="text-blue-400 hover:text-blue-300 underline text-sm font-mono"
+                          className="text-blue-400 hover:text-blue-300 underline text-sm"
+                          title="View Pyth Entropy Proof"
                         >
-                          {item.txHash.slice(0, 8)}...
+                          Entropy
                         </a>
                       ) : (
-                        <span className="text-gray-500 text-sm">Pending</span>
+                        <span className="text-gray-500 text-sm">N/A</span>
                       )}
+                    </td>
+                    <td className="py-6 px-4">
+                      <div className="flex justify-center">
+                        <MovementTxLink
+                          transactionHash={item.movementTxHash}
+                          isPending={item.movementTxStatus === 'pending'}
+                        />
+                      </div>
                     </td>
                   </tr>
                 ))
               ) : (
                 <tr>
-                  <td colSpan={6} className="py-8 text-center text-gray-400">
+                  <td colSpan={7} className="py-8 text-center text-gray-400">
                     No game history yet. Place your first bet!
                   </td>
                 </tr>

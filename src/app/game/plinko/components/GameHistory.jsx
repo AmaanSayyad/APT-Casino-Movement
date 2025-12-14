@@ -1,5 +1,6 @@
 "use client";
 import { useState } from "react";
+import MovementTxLink from "@/components/MovementTxLink";
 
 export default function GameHistory({ history }) {
   const [visibleCount, setVisibleCount] = useState(5);
@@ -41,7 +42,10 @@ export default function GameHistory({ history }) {
                 Payout
               </th>
               <th className="text-left py-3 px-4 text-sm font-medium text-gray-400">
-                TX
+                Entropy
+              </th>
+              <th className="text-left py-3 px-4 text-sm font-medium text-gray-400">
+                Movement
               </th>
             </tr>
           </thead>
@@ -75,18 +79,26 @@ export default function GameHistory({ history }) {
                   </div>
                 </td>
                 <td className="py-3 px-4">
-                  {game.txHash ? (
+                  {game.entropyProof ? (
                     <a
-                      href={`https://explorer.aptoslabs.com/txn/${game.txHash}?network=testnet`}
+                      href={game.entropyProof}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="text-blue-400 hover:text-blue-300 text-xs underline"
+                      title="View Pyth Entropy Proof"
                     >
-                      {game.txHash.slice(0, 6)}...{game.txHash.slice(-4)}
+                      Entropy
                     </a>
                   ) : (
-                    <span className="text-gray-500 text-xs">pending</span>
+                    <span className="text-gray-500 text-xs">N/A</span>
                   )}
+                </td>
+                <td className="py-3 px-4">
+                  <MovementTxLink
+                    transactionHash={game.movementTxHash}
+                    isPending={game.movementTxStatus === 'pending'}
+                    className="flex justify-center"
+                  />
                 </td>
               </tr>
             ))}

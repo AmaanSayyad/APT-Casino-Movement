@@ -111,11 +111,58 @@ export function octasToMove(octas: bigint | string | number): number {
   return Number(octasValue) / Math.pow(10, 8);
 }
 
+/**
+ * Generate Movement explorer URL for a transaction
+ * 
+ * @param transactionHash - The transaction hash
+ * @param explorerBaseUrl - Base URL for the explorer (defaults to Movement testnet)
+ * @returns Complete explorer URL
+ * 
+ * @example
+ * generateMovementExplorerUrl("0xabc123...")
+ * // Returns: "https://explorer.movementnetwork.xyz/?network=bardock+testnet#/txn/0xabc123..."
+ */
+export function generateMovementExplorerUrl(
+  transactionHash: string,
+  explorerBaseUrl: string = "https://explorer.movementnetwork.xyz"
+): string {
+  if (!transactionHash) {
+    throw new Error('Transaction hash is required');
+  }
+  
+  // Format: {explorerBaseUrl}/?network=bardock+testnet#/txn/{transactionHash}
+  return `${explorerBaseUrl}/?network=bardock+testnet#/txn/${transactionHash}`;
+}
+
+/**
+ * Open Movement explorer URL in new tab
+ * 
+ * @param transactionHash - The transaction hash
+ * @param explorerBaseUrl - Base URL for the explorer
+ * 
+ * @example
+ * openMovementExplorer("0xabc123...")
+ * // Opens explorer in new tab
+ */
+export function openMovementExplorer(
+  transactionHash: string,
+  explorerBaseUrl?: string
+): void {
+  try {
+    const url = generateMovementExplorerUrl(transactionHash, explorerBaseUrl);
+    window.open(url, '_blank', 'noopener,noreferrer');
+  } catch (error) {
+    console.error('Failed to open Movement explorer:', error);
+  }
+}
+
 export default {
   shortenAddress,
   isValidAddress,
   normalizeAddress,
   formatBalance,
   moveToOctas,
-  octasToMove
+  octasToMove,
+  generateMovementExplorerUrl,
+  openMovementExplorer
 };

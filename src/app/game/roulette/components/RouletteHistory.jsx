@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import { Box, Typography, Paper, Tabs, Tab, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Chip, CircularProgress, Fade } from '@mui/material';
 import { FaHistory, FaChartLine, FaFire, FaExclamationCircle, FaCoins, FaInfoCircle, FaTrophy, FaDice } from 'react-icons/fa';
+import MovementTxLink from '@/components/MovementTxLink';
 
 // Sample data for demonstration - would be fetched from API in real app
 const sampleBets = [
@@ -340,7 +341,8 @@ const RouletteHistory = ({ bettingHistory = [] }) => {
                       <TableCell align="center">Amount</TableCell>
                       <TableCell align="center">Result</TableCell>
                       <TableCell align="right">Payout</TableCell>
-                      <TableCell align="center">TX</TableCell>
+                      <TableCell align="center">Entropy</TableCell>
+                      <TableCell align="center">Movement</TableCell>
                     </TableRow>
                   </TableHead>
                   <TableBody>
@@ -483,18 +485,25 @@ const RouletteHistory = ({ bettingHistory = [] }) => {
                           </Typography>
                         </TableCell>
                         <TableCell align="center">
-                          {bet.txHash ? (
+                          {bet.entropyProof ? (
                             <a
-                              href={`https://explorer.aptoslabs.com/txn/${bet.txHash}?network=testnet`}
+                              href={bet.entropyProof}
                               target="_blank"
                               rel="noopener noreferrer"
                               style={{ color: '#60a5fa', textDecoration: 'underline', fontSize: '0.75rem' }}
+                              title="View Pyth Entropy Proof"
                             >
-                              {bet.txHash.slice(0, 6)}...{bet.txHash.slice(-4)}
+                              Entropy
                             </a>
                           ) : (
-                            <Typography variant="caption" color="rgba(255,255,255,0.5)">pending</Typography>
+                            <Typography variant="caption" color="rgba(255,255,255,0.5)">N/A</Typography>
                           )}
+                        </TableCell>
+                        <TableCell align="center">
+                          <MovementTxLink
+                            transactionHash={bet.movementTxHash}
+                            isPending={bet.movementTxStatus === 'pending'}
+                          />
                         </TableCell>
                       </TableRow>
                     ))}

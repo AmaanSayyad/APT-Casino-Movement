@@ -4,12 +4,14 @@ import Matter from 'matter-js';
 import { useSelector, useDispatch } from 'react-redux';
 import { setBalance, addToBalance } from '@/store/balanceSlice';
 import { useGameLogger } from '@/hooks/useGameLogger';
+import { useMovementGameLogger } from '@/hooks/useMovementGameLogger';
 import { useWallet } from '@aptos-labs/wallet-adapter-react';
 
 const PlinkoGame = forwardRef(({ rowCount = 16, riskLevel = "Medium", onRowChange, betAmount = 0, onBetHistoryChange }, ref) => {
   const dispatch = useDispatch();
   const userBalance = useSelector((state) => state.balance.userBalance);
   const { logGame } = useGameLogger();
+  const { logGame: logMovementGame } = useMovementGameLogger();
   const { account } = useWallet();
   
   const [isDropping, setIsDropping] = useState(false);
@@ -505,6 +507,9 @@ const PlinkoGame = forwardRef(({ rowCount = 16, riskLevel = "Medium", onRowChang
         // Play bin land sound
         playAudio(binLandAudioRef);
         
+        // Generate random seed for entropy (timestamp + random for uniqueness)
+        const randomSeed = BigInt(Date.now() * 1000 + Math.floor(Math.random() * 1000));
+        
         // Add to bet history
         const newBetResult = {
           id: Date.now(),
@@ -515,7 +520,10 @@ const PlinkoGame = forwardRef(({ rowCount = 16, riskLevel = "Medium", onRowChang
           payout: reward.toFixed(2),
           timestamp: Date.now(),
           txHash: null,
-          explorerUrl: null
+          explorerUrl: null,
+          entropyProof: null, // Will be populated when Pyth entropy is integrated
+          movementTxHash: null,
+          movementTxStatus: 'none'
         };
         setBetHistory(prev => {
           const updated = [newBetResult, ...prev.slice(0, 99)]; // Keep last 100
@@ -527,7 +535,7 @@ const PlinkoGame = forwardRef(({ rowCount = 16, riskLevel = "Medium", onRowChang
           onBetHistoryChange(newBetResult);
         }
         
-        // Log game to blockchain
+        // Log game to blockchain (existing system)
         if (account?.address && latestBetAmount > 0) {
           const gameResult = `${rows}rows_${riskLevel}_bin${binIndex}_${multiplier}`;
           logGame({
@@ -552,6 +560,92 @@ const PlinkoGame = forwardRef(({ rowCount = 16, riskLevel = "Medium", onRowChang
             }
           }).catch(error => {
             console.error('Failed to log game to blockchain:', error);
+          });
+        }
+        
+        // Log game to Movement blockchain
+        if (account?.address && latestBetAmount > 0) {
+          console.log('🎯 Logging Plinko game to Movement blockchain...');
+          
+          // Update history to show pending status
+          setBetHistory(prev => {
+            if (prev.length === 0) return prev;
+            const [first, ...rest] = prev;
+            const updatedFirst = { ...first, movementTxStatus: 'pending' };
+            return [updatedFirst, ...rest];
+          });
+          
+          if (onBetHistoryChange) {
+            onBetHistoryChange({ ...newBetResult, movementTxStatus: 'pending' });
+          }
+          
+          const gameResult = `${rows}rows_${riskLevel}_bin${binIndex}_${multiplier}`;
+          const betAmountOctas = BigInt(Math.floor(latestBetAmount * 100000000)); // Convert to octas
+          const payoutOctas = BigInt(Math.floor(reward * 100000000)); // Convert to octas
+          
+          logMovementGame({
+            gameType: 'plinko',
+            playerAddress: account.address,
+            betAmount: betAmountOctas,
+            result: gameResult,
+            payout: payoutOctas,
+            randomSeed: randomSeed,
+          }).then(res => {
+            if (res?.success) {
+              console.log('✅ Plinko game successfully logged to Movement blockchain');
+              console.log('├── Transaction Hash:', res.transactionHash);
+              console.log('├── Explorer URL:', res.explorerUrl);
+              console.log('├── Random Seed:', randomSeed.toString());
+              console.log('└── Game Result:', gameResult);
+              
+              // Update history with successful Movement transaction
+              setBetHistory(prev => {
+                if (prev.length === 0) return prev;
+                const [first, ...rest] = prev;
+                const updatedFirst = { 
+                  ...first, 
+                  movementTxHash: res.transactionHash || null, 
+                  movementTxStatus: 'confirmed' 
+                };
+                return [updatedFirst, ...rest];
+              });
+              
+              if (onBetHistoryChange) {
+                onBetHistoryChange({ 
+                  ...newBetResult, 
+                  movementTxHash: res.transactionHash || null, 
+                  movementTxStatus: 'confirmed' 
+                });
+              }
+            } else {
+              console.error('❌ Failed to log Plinko game to Movement:', res.error);
+              
+              // Update history to show failed status
+              setBetHistory(prev => {
+                if (prev.length === 0) return prev;
+                const [first, ...rest] = prev;
+                const updatedFirst = { ...first, movementTxStatus: 'failed' };
+                return [updatedFirst, ...rest];
+              });
+              
+              if (onBetHistoryChange) {
+                onBetHistoryChange({ ...newBetResult, movementTxStatus: 'failed' });
+              }
+            }
+          }).catch(error => {
+            console.error('❌ Error logging Plinko game to Movement blockchain:', error);
+            
+            // Update history to show failed status
+            setBetHistory(prev => {
+              if (prev.length === 0) return prev;
+              const [first, ...rest] = prev;
+              const updatedFirst = { ...first, movementTxStatus: 'failed' };
+              return [updatedFirst, ...rest];
+            });
+            
+            if (onBetHistoryChange) {
+              onBetHistoryChange({ ...newBetResult, movementTxStatus: 'failed' });
+            }
           });
         }
         

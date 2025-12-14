@@ -20,6 +20,7 @@ import { useTheme } from "next-themes";
 import useWalletStatus from '@/hooks/useWalletStatus';
 import AptosConnectWalletButton from '@/components/AptosConnectWalletButton';
 import { useGameLogger } from '@/hooks/useGameLogger';
+import { useMovementGameLogger } from '@/hooks/useMovementGameLogger';
 import { useWallet } from '@aptos-labs/wallet-adapter-react';
 import Image from "next/image";
 import "./mines.css";
@@ -39,6 +40,7 @@ export default function Mines() {
   
   // Game logging hooks
   const { logGame } = useGameLogger();
+  const { logGame: logMovementGame } = useMovementGameLogger();
   const { account } = useWallet();
   
   // AI Auto Betting State
@@ -192,6 +194,9 @@ export default function Mines() {
 
   // Handle game completion (only when game ends - cashout or mine hit)
   const handleGameComplete = (result) => {
+    // Generate random seed for entropy (timestamp + random for uniqueness)
+    const randomSeed = BigInt(Date.now() * 1000 + Math.floor(Math.random() * 1000));
+    
     const newHistoryItem = {
       id: Date.now(),
       mines: result.mines || 0,
@@ -200,11 +205,14 @@ export default function Mines() {
       payout: result.won ? `${result.payout || 0} APT` : '0 APT',
       multiplier: result.won ? `${result.multiplier || 0}x` : '0x',
       time: 'Just now',
-      txHash: null
+      txHash: null,
+      entropyProof: null, // Will be populated when Pyth entropy is integrated
+      movementTxHash: null,
+      movementTxStatus: 'none'
     };
     setGameHistory(prev => [newHistoryItem, ...prev].slice(0, 50));
     
-    // Log game to blockchain
+    // Log game to blockchain (existing system)
     if (account?.address && result.betAmount > 0) {
       const gameResult = `${result.mines}mines_${result.won ? 'win' : 'loss'}_${result.multiplier || 0}x`;
       logGame({
@@ -224,6 +232,75 @@ export default function Mines() {
         }
       }).catch(error => {
         console.error('Failed to log mines game:', error);
+      });
+    }
+    
+    // Log game to Movement blockchain
+    if (account?.address && result.betAmount > 0) {
+      console.log('🎯 Logging Mines game to Movement blockchain...');
+      
+      // Update history to show pending status
+      setGameHistory(prev => {
+        if (prev.length === 0) return prev;
+        const [first, ...rest] = prev;
+        const updatedFirst = { ...first, movementTxStatus: 'pending' };
+        return [updatedFirst, ...rest];
+      });
+      
+      const gameResult = `${result.mines}mines_${result.won ? 'win' : 'loss'}_${result.multiplier || 0}x`;
+      const betAmountOctas = BigInt(Math.floor(result.betAmount * 100000000)); // Convert to octas
+      const payoutOctas = BigInt(Math.floor((result.payout || 0) * 100000000)); // Convert to octas
+      
+      logMovementGame({
+        gameType: 'mines',
+        playerAddress: account.address,
+        betAmount: betAmountOctas,
+        result: gameResult,
+        payout: payoutOctas,
+        randomSeed: randomSeed,
+      }).then(res => {
+        if (res?.success) {
+          console.log('✅ Mines game successfully logged to Movement blockchain');
+          console.log('├── Transaction Hash:', res.transactionHash);
+          console.log('├── Explorer URL:', res.explorerUrl);
+          console.log('├── Random Seed:', randomSeed.toString());
+          console.log('├── Game Result:', gameResult);
+          console.log('├── Mines Count:', result.mines);
+          console.log('├── Outcome:', result.won ? 'WIN' : 'LOSS');
+          console.log('└── Multiplier:', result.multiplier || 0);
+          
+          // Update history with successful Movement transaction
+          setGameHistory(prev => {
+            if (prev.length === 0) return prev;
+            const [first, ...rest] = prev;
+            const updatedFirst = { 
+              ...first, 
+              movementTxHash: res.transactionHash || null, 
+              movementTxStatus: 'confirmed' 
+            };
+            return [updatedFirst, ...rest];
+          });
+        } else {
+          console.error('❌ Failed to log Mines game to Movement:', res.error);
+          
+          // Update history to show failed status
+          setGameHistory(prev => {
+            if (prev.length === 0) return prev;
+            const [first, ...rest] = prev;
+            const updatedFirst = { ...first, movementTxStatus: 'failed' };
+            return [updatedFirst, ...rest];
+          });
+        }
+      }).catch(error => {
+        console.error('❌ Error logging Mines game to Movement blockchain:', error);
+        
+        // Update history to show failed status
+        setGameHistory(prev => {
+          if (prev.length === 0) return prev;
+          const [first, ...rest] = prev;
+          const updatedFirst = { ...first, movementTxStatus: 'failed' };
+          return [updatedFirst, ...rest];
+        });
       });
     }
   };

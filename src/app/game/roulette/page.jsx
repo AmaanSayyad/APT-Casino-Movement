@@ -22,6 +22,7 @@ import { useToken } from "@/hooks/useToken";
 
 import useWalletStatus from '@/hooks/useWalletStatus';
 import { useGameLogger } from '@/hooks/useGameLogger';
+import { useMovementGameLogger } from '@/hooks/useMovementGameLogger';
 import { useWallet } from '@aptos-labs/wallet-adapter-react';
 
 import { FaVolumeMute, FaVolumeUp, FaChartLine, FaCoins, FaTrophy, FaDice, FaBalanceScale, FaRandom, FaPercentage, FaPlayCircle } from "react-icons/fa";
@@ -1170,6 +1171,7 @@ export default function GameRoulette() {
   const [realBalance, setRealBalance] = useState('0');
   const { balance } = useToken(address); // Keep for compatibility
   const { logGame } = useGameLogger();
+  const { logGame: logMovementGame } = useMovementGameLogger();
   const HOUSE_ADDR = CASINO_MODULE_ADDRESS;
 
   // Function to fetch real APT balance
@@ -1958,6 +1960,9 @@ export default function GameRoulette() {
           totalBets: allBets.length, // Add totalBets field
           winningBets: winningBets.length, // Add winningBets field
           txHash: null,
+          entropyProof: null, // Will be populated when Pyth entropy is integrated
+          movementTxHash: null,
+          movementTxStatus: 'none',
           details: {
             winningBets: winningBets.map(bet => `${bet.name}: ${bet.amount} × ${bet.multiplier}x`),
             losingBets: losingBets.map(bet => `${bet.name}: -${bet.amount}`)
@@ -1974,7 +1979,7 @@ export default function GameRoulette() {
 
         setBettingHistory(prev => [newBet, ...prev].slice(0, 50)); // Keep last 50 bets
 
-        // Log game to blockchain
+        // Log game to blockchain (existing system)
         if (account?.address && totalBetAmount > 0) {
           const gameResult = `number${winningNumber}_${netResult > 0 ? 'win' : 'loss'}_${winningBets.length}bets`;
           logGame({
@@ -1994,6 +1999,80 @@ export default function GameRoulette() {
             }
           }).catch(error => {
             console.error('Failed to log roulette game:', error);
+          });
+        }
+        
+        // Log game to Movement blockchain
+        if (account?.address && totalBetAmount > 0) {
+          console.log('🎯 Logging Roulette game to Movement blockchain...');
+          
+          // Generate random seed for entropy (timestamp + random for uniqueness)
+          const randomSeed = BigInt(Date.now() * 1000 + Math.floor(Math.random() * 1000));
+          
+          // Update history to show pending status
+          setBettingHistory(prev => {
+            if (prev.length === 0) return prev;
+            const [first, ...rest] = prev;
+            const updatedFirst = { ...first, movementTxStatus: 'pending' };
+            return [updatedFirst, ...rest];
+          });
+          
+          const gameResult = `number${winningNumber}_${netResult > 0 ? 'win' : 'loss'}_${winningBets.length}bets`;
+          const betAmountOctas = BigInt(Math.floor(totalBetAmount * 100000000)); // Convert to octas
+          const payoutOctas = BigInt(Math.floor((netResult > 0 ? netResult : 0) * 100000000)); // Convert to octas
+          
+          logMovementGame({
+            gameType: 'roulette',
+            playerAddress: account.address,
+            betAmount: betAmountOctas,
+            result: gameResult,
+            payout: payoutOctas,
+            randomSeed: randomSeed,
+          }).then(res => {
+            if (res?.success) {
+              console.log('✅ Roulette game successfully logged to Movement blockchain');
+              console.log('├── Transaction Hash:', res.transactionHash);
+              console.log('├── Explorer URL:', res.explorerUrl);
+              console.log('├── Random Seed:', randomSeed.toString());
+              console.log('├── Game Result:', gameResult);
+              console.log('├── Winning Number:', winningNumber);
+              console.log('├── Total Bet Amount:', totalBetAmount);
+              console.log('├── Net Result:', netResult);
+              console.log('├── Winning Bets:', winningBets.length);
+              console.log('└── Outcome:', netResult > 0 ? 'WIN' : 'LOSS');
+              
+              // Update history with successful Movement transaction
+              setBettingHistory(prev => {
+                if (prev.length === 0) return prev;
+                const [first, ...rest] = prev;
+                const updatedFirst = { 
+                  ...first, 
+                  movementTxHash: res.transactionHash || null, 
+                  movementTxStatus: 'confirmed' 
+                };
+                return [updatedFirst, ...rest];
+              });
+            } else {
+              console.error('❌ Failed to log Roulette game to Movement:', res.error);
+              
+              // Update history to show failed status
+              setBettingHistory(prev => {
+                if (prev.length === 0) return prev;
+                const [first, ...rest] = prev;
+                const updatedFirst = { ...first, movementTxStatus: 'failed' };
+                return [updatedFirst, ...rest];
+              });
+            }
+          }).catch(error => {
+            console.error('❌ Error logging Roulette game to Movement blockchain:', error);
+            
+            // Update history to show failed status
+            setBettingHistory(prev => {
+              if (prev.length === 0) return prev;
+              const [first, ...rest] = prev;
+              const updatedFirst = { ...first, movementTxStatus: 'failed' };
+              return [updatedFirst, ...rest];
+            });
           });
         }
 

@@ -1,4 +1,4 @@
-module apt_casino::game_logger {
+module movement_casino::game_logger {
     use std::signer;
     use std::string::String;
     use std::vector;
@@ -59,15 +59,13 @@ module apt_casino::game_logger {
         bet_amount: u64,
         result: String,
         payout: u64,
+        random_seed: u64,
     ) acquires GameLog {
         let treasury_addr = signer::address_of(treasury);
         assert!(exists<GameLog>(treasury_addr), E_NOT_AUTHORIZED);
         
         let game_log = borrow_global_mut<GameLog>(treasury_addr);
         let game_id = vector::length(&game_log.games) + 1;
-        
-        // Generate pseudo-random seed using timestamp and game_id
-        let random_seed = timestamp::now_microseconds() + (game_id * 1000000);
         
         let game_entry = GameEntry {
             game_id,
