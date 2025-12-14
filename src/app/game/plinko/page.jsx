@@ -192,7 +192,20 @@ export default function Plinko() {
   };
 
   const handleBetHistoryChange = (newBetResult) => {
-    setGameHistory(prev => [newBetResult, ...prev].slice(0, 100)); // Keep up to last 100 entries
+    setGameHistory(prev => {
+      // Check if a game with the same ID already exists
+      const existingIndex = prev.findIndex(game => game.id === newBetResult.id);
+      
+      if (existingIndex !== -1) {
+        // Update existing game entry
+        const updated = [...prev];
+        updated[existingIndex] = { ...updated[existingIndex], ...newBetResult };
+        return updated;
+      } else {
+        // Add new game entry
+        return [newBetResult, ...prev].slice(0, 100); // Keep up to last 100 entries
+      }
+    });
   };
 
   const handleRowChange = (newRows) => {

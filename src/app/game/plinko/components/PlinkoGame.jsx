@@ -4,13 +4,16 @@ import Matter from 'matter-js';
 import { useSelector, useDispatch } from 'react-redux';
 import { setBalance, addToBalance } from '@/store/balanceSlice';
 import { useMovementGameLogger } from '@/hooks/useMovementGameLogger';
-import { useWallet } from '@aptos-labs/wallet-adapter-react';
+import { useMovementWallet } from '@/hooks/useMovementWallet';
 
 const PlinkoGame = forwardRef(({ rowCount = 16, riskLevel = "Medium", onRowChange, betAmount = 0, onBetHistoryChange }, ref) => {
   const dispatch = useDispatch();
   const userBalance = useSelector((state) => state.balance.userBalance);
   const { logGame: logMovementGame } = useMovementGameLogger();
-  const { account } = useWallet();
+  const { address, isConnected } = useMovementWallet();
+  
+  // Create account-like object for compatibility
+  const account = address ? { address } : null;
   
   const [isDropping, setIsDropping] = useState(false);
   const [ballPosition, setBallPosition] = useState(null);
@@ -619,7 +622,16 @@ const PlinkoGame = forwardRef(({ rowCount = 16, riskLevel = "Medium", onRowChang
         }
         
         // Log game to Movement blockchain
-        if (account?.address && latestBetAmount > 0) {
+        console.log('🔍 Plinko Movement Log Check:', {
+          isConnected,
+          hasAddress: !!address,
+          address: address,
+          latestBetAmount,
+          betAmountValid: latestBetAmount > 0
+        });
+        
+        if (address && latestBetAmount > 0) {
+          console.log('🎯 Logging Plinko game to Movement blockchain...');
           
           // Update history to show pending status using unique ID for precise targeting
           setBetHistory(prev => {
@@ -638,14 +650,24 @@ const PlinkoGame = forwardRef(({ rowCount = 16, riskLevel = "Medium", onRowChang
           const betAmountOctas = BigInt(Math.floor(latestBetAmount * 100000000)); // Convert to octas
           const payoutOctas = BigInt(Math.floor(reward * 100000000)); // Convert to octas
           
+          console.log('📤 Calling logMovementGame with:', {
+            gameType: 'plinko',
+            playerAddress: address,
+            betAmountOctas: betAmountOctas.toString(),
+            result: gameResult,
+            payoutOctas: payoutOctas.toString(),
+            randomSeed: randomSeed.toString()
+          });
+          
           logMovementGame({
             gameType: 'plinko',
-            playerAddress: account.address,
+            playerAddress: address,
             betAmount: betAmountOctas,
             result: gameResult,
             payout: payoutOctas,
             randomSeed: randomSeed,
           }).then(res => {
+            console.log('📥 logMovementGame response:', res);
             if (res?.success) {
               
               // Update history with successful Movement transaction using unique ID
@@ -684,6 +706,7 @@ const PlinkoGame = forwardRef(({ rowCount = 16, riskLevel = "Medium", onRowChang
               }
             }
           }).catch(error => {
+            console.error('❌ Error logging Plinko game to Movement:', error);
             
             // Update history to show failed status using unique ID
             setBetHistory(prev => {
@@ -697,6 +720,13 @@ const PlinkoGame = forwardRef(({ rowCount = 16, riskLevel = "Medium", onRowChang
             if (onBetHistoryChange) {
               onBetHistoryChange({ ...newBetResult, movementTxStatus: 'failed' });
             }
+          });
+        } else {
+          console.warn('⚠️ Plinko game NOT logged to Movement blockchain:', {
+            reason: !address ? 'No wallet address' : 'Bet amount is 0 or invalid',
+            isConnected,
+            address: address,
+            latestBetAmount
           });
         }
         

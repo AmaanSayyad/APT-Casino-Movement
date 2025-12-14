@@ -47,7 +47,14 @@ export default function GameHistory({ history }) {
             </tr>
           </thead>
           <tbody>
-            {history.slice(0, visibleCount).map((game) => (
+            {history
+              .filter((game, index, self) => {
+                // Remove duplicates by keeping only the most recent occurrence of each game ID
+                const lastIndex = self.map(g => g.id).lastIndexOf(game.id);
+                return index === lastIndex;
+              })
+              .slice(0, visibleCount)
+              .map((game) => (
               <tr key={game.id} className="border-b border-[#333947]/30 hover:bg-[#2A0025]/50 transition-colors">
                 <td className="py-3 px-4">
                   <div className="flex items-center gap-2">
