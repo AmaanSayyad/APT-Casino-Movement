@@ -16,7 +16,7 @@ const LiveChat = dynamic(() => import('./LiveChat'), { ssr: false });
 
 
 import { useNotification } from './NotificationSystem';
-import { UserBalanceSystem, parseAptAmount, aptosClient, TREASURY_ADDRESS } from '@/lib/movement';
+import { UserBalanceSystem, parseAptAmount, aptosClient, TREASURY_ADDRESS } from '@/lib/aptos';
 import { useBackendDeposit } from '@/hooks/useBackendDeposit';
 import { useMovementWallet } from '@/hooks/useMovementWallet';
 import { useMovementBalance } from '@/hooks/useMovementBalance';
@@ -214,7 +214,57 @@ export default function Navbar() {
     dispatch(setLoading(false));
   };
 
-  // Handle withdraw using Movement transactions
+  // Handle withdraw from navbar button - calls our withdraw API
+  const handleWithdrawFromNavbar = async (amount) => {
+    if (!movementWallet.isConnected || !movementWallet.address) {
+      notification.error('Please connect your Movement wallet first');
+      return;
+    }
+
+    const withdrawAmount = parseFloat(amount) || 0;
+    if (withdrawAmount <= 0) {
+      notification.error('No house balance to withdraw');
+      return;
+    }
+
+    try {
+      setIsWithdrawing(true);
+      
+      // Call our withdraw API
+      const response = await fetch('/api/withdraw', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          playerAddress: movementWallet.address,
+          amount: withdrawAmount
+        })
+      });
+
+      const result = await response.json();
+      
+      if (response.ok && result.success) {
+        // Update house balance (subtract the withdrawn amount)
+        dispatch(subtractFromBalance(withdrawAmount));
+        
+        notification.success(`Successfully withdrew ${withdrawAmount} MOVE! TX: ${result.transactionHash?.slice(0, 8)}...`);
+        
+        // Refresh wallet balance
+        movementBalance.refreshWalletBalance();
+      } else {
+        throw new Error(result.error || result.details || 'Withdrawal failed');
+      }
+      
+    } catch (error) {
+      console.error('Withdraw error:', error);
+      notification.error(`Withdrawal failed: ${error.message}`);
+    } finally {
+      setIsWithdrawing(false);
+    }
+  };
+
+  // Handle withdraw using Movement transactions (for modal)
   const handleWithdraw = async () => {
     if (!movementWallet.isConnected || !movementWallet.address) {
       notification.error('Please connect your Movement wallet first');
@@ -230,32 +280,38 @@ export default function Navbar() {
     try {
       setIsWithdrawing(true);
       
-      // Withdraw all house balance
-      const withdrawAmount = currentBalance;
+      // Call our withdraw API
+      const response = await fetch('/api/withdraw', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          playerAddress: movementWallet.address,
+          amount: currentBalance
+        })
+      });
+
+      const result = await response.json();
       
-      // Update house balance first (optimistic update)
-      dispatch(subtractFromBalance(withdrawAmount));
-      
-      // For now, just simulate withdrawal (backend integration needed for actual MOVE transfer)
-      const result = await movementTransactions.requestWithdrawal(withdrawAmount);
-      
-      if (result.success) {
-        notification.success(`Successfully withdrew ${withdrawAmount} MOVE from house balance!`);
+      if (response.ok && result.success) {
+        // Update house balance (subtract the withdrawn amount)
+        dispatch(subtractFromBalance(currentBalance));
+        
+        notification.success(`Successfully withdrew ${currentBalance} MOVE! TX: ${result.transactionHash?.slice(0, 8)}...`);
         
         // Close the modal
         setShowBalanceModal(false);
+        
+        // Refresh wallet balance
+        movementBalance.refreshWalletBalance();
       } else {
-        // Revert balance if failed
-        dispatch(addToBalance(withdrawAmount));
-        throw new Error(result.error || 'Withdrawal request failed');
+        throw new Error(result.error || result.details || 'Withdrawal failed');
       }
       
     } catch (error) {
       console.error('Withdraw error:', error);
       notification.error(`Withdrawal failed: ${error.message}`);
-      
-      // Revert balance on error
-      dispatch(addToBalance(withdrawAmount));
     } finally {
       setIsWithdrawing(false);
     }
@@ -726,6 +782,7 @@ export default function Navbar() {
             isConnected={movementWallet.isConnected && movementWallet.isCorrectNetwork}
             isLoading={isLoadingBalance}
             onDeposit={() => setShowBalanceModal(true)}
+            onWithdraw={handleWithdrawFromNavbar}
           />
           
 

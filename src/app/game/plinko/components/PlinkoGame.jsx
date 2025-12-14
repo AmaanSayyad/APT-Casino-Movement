@@ -20,6 +20,11 @@ const PlinkoGame = forwardRef(({ rowCount = 16, riskLevel = "Medium", onRowChang
   const [isRecreating, setIsRecreating] = useState(false);
   const [betHistory, setBetHistory] = useState([]);
   
+  // Enhanced unique ID generation system
+  const [sessionId] = useState(() => `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`);
+  const [gameSequence, setGameSequence] = useState(0);
+  const gameHistoryIds = useRef(new Set()); // Track all generated IDs to prevent duplicates
+  
   // Physics engine refs
   const engineRef = useRef(null);
   const renderRef = useRef(null);
@@ -73,6 +78,83 @@ const PlinkoGame = forwardRef(({ rowCount = 16, riskLevel = "Medium", onRowChang
   useEffect(() => {
     betAmountRef.current = parseFloat(betAmount) || 0;
   }, [betAmount]);
+
+  // Enhanced unique ID generation function
+  const generateUniqueGameId = useCallback((binIndex) => {
+    try {
+      const timestamp = Date.now();
+      const sequence = gameSequence;
+      const randomComponent = Math.random().toString(36).substr(2, 9);
+      
+      // Create a comprehensive unique ID with session tracking and sequence numbering
+      const uniqueId = `plinko_${sessionId}_${sequence}_${timestamp}_${randomComponent}_bin${binIndex}`;
+      
+      // Ensure absolute uniqueness by checking against existing IDs
+      let finalId = uniqueId;
+      let counter = 0;
+      while (gameHistoryIds.current.has(finalId)) {
+        counter++;
+        finalId = `${uniqueId}_dup${counter}`;
+        console.warn(`Duplicate ID detected during generation, using: ${finalId}`);
+      }
+      
+      // Add to tracking set and increment sequence
+      gameHistoryIds.current.add(finalId);
+      setGameSequence(prev => prev + 1);
+      
+      console.log(`Generated unique game ID: ${finalId} (session: ${sessionId}, sequence: ${sequence})`);
+      return finalId;
+    } catch (error) {
+      console.error('Error generating unique game ID:', error);
+      // Fallback ID generation
+      const fallbackId = `plinko_fallback_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      gameHistoryIds.current.add(fallbackId);
+      return fallbackId;
+    }
+  }, [sessionId, gameSequence]);
+
+  // Duplicate prevention function with comprehensive logging
+  const isDuplicateGame = useCallback((newGame, existingHistory) => {
+    try {
+      // Check for exact duplicates based on multiple criteria
+      const duplicate = existingHistory.find(existingGame => {
+        // Same ID check (primary prevention)
+        if (existingGame.id === newGame.id) {
+          console.warn(`Duplicate game detected - same ID: ${newGame.id}`);
+          return true;
+        }
+        
+        // Temporal proximity check with stricter criteria
+        const timeDiff = Math.abs(existingGame.timestamp - newGame.timestamp);
+        const isSameTime = timeDiff < 500; // Reduced from 1000ms to 500ms
+        const isSameBet = existingGame.betAmount === newGame.betAmount;
+        const isSameMultiplier = existingGame.multiplier === newGame.multiplier;
+        const isSamePayout = existingGame.payout === newGame.payout;
+        
+        // Only consider duplicate if ALL criteria match (more strict)
+        const isDuplicate = isSameTime && isSameBet && isSameMultiplier && isSamePayout;
+        
+        if (isDuplicate) {
+          console.warn(`Duplicate game detected - temporal proximity:`, {
+            newGameId: newGame.id,
+            existingGameId: existingGame.id,
+            timeDiff,
+            betAmount: newGame.betAmount,
+            multiplier: newGame.multiplier,
+            payout: newGame.payout
+          });
+        }
+        
+        return isDuplicate;
+      });
+      
+      return !!duplicate;
+    } catch (error) {
+      console.error('Error in duplicate detection:', error);
+      // In case of error, err on the side of caution and don't add the game
+      return true;
+    }
+  }, []);
 
   // Game constants - matching the reference repo
   const CANVAS_WIDTH = 800;
@@ -469,37 +551,66 @@ const PlinkoGame = forwardRef(({ rowCount = 16, riskLevel = "Medium", onRowChang
         // Generate random seed (timestamp + random for uniqueness)
         const randomSeed = BigInt(Date.now() * 1000 + Math.floor(Math.random() * 1000));
         
-        // Add to bet history - only once per ball drop
-        const uniqueId = `${Date.now()}_${Math.random().toString(36).substr(2, 9)}_${binIndex}`;
+        // Generate enhanced unique ID with session tracking and sequence numbering
+        const uniqueId = generateUniqueGameId(binIndex);
+        const currentTimestamp = Date.now();
+        
         const newBetResult = {
           id: uniqueId,
           game: "Plinko",
-          title: new Date().toLocaleTimeString(),
+          title: new Date(currentTimestamp).toLocaleTimeString(),
           betAmount: latestBetAmount.toFixed(2),
           multiplier: multipliers[binIndex],
           payout: reward.toFixed(2),
-          timestamp: Date.now(),
+          timestamp: currentTimestamp,
+          sessionId: sessionId,
+          sequenceNumber: gameSequence - 1, // Use the sequence number before increment
           txHash: null,
           explorerUrl: null,
           movementTxHash: null,
           movementTxStatus: 'none'
         };
         
-        // Check if this exact result already exists to prevent duplicates
+        // Enhanced duplicate prevention with comprehensive checking and audit logging
         setBetHistory(prev => {
-          // Check if we already have a recent entry with same timestamp (within 1 second)
-          const recentDuplicate = prev.find(bet => 
-            Math.abs(bet.timestamp - newBetResult.timestamp) < 1000 &&
-            bet.betAmount === newBetResult.betAmount &&
-            bet.multiplier === newBetResult.multiplier
-          );
-          
-          if (recentDuplicate) {
-            return prev; // Don't add duplicate
+          try {
+            // Use the enhanced duplicate detection function
+            if (isDuplicateGame(newBetResult, prev)) {
+              console.warn('AUDIT: Duplicate game detected and prevented:', {
+                gameId: newBetResult.id,
+                sessionId: newBetResult.sessionId,
+                sequenceNumber: newBetResult.sequenceNumber,
+                timestamp: newBetResult.timestamp,
+                betAmount: newBetResult.betAmount,
+                multiplier: newBetResult.multiplier,
+                payout: newBetResult.payout
+              });
+              return prev; // Don't add duplicate
+            }
+            
+            const updated = [newBetResult, ...prev.slice(0, 99)]; // Keep last 100
+            
+            // Audit log successful game addition
+            console.log('AUDIT: Game successfully added to history:', {
+              gameId: newBetResult.id,
+              sessionId: newBetResult.sessionId,
+              sequenceNumber: newBetResult.sequenceNumber,
+              timestamp: newBetResult.timestamp,
+              betAmount: newBetResult.betAmount,
+              multiplier: newBetResult.multiplier,
+              payout: newBetResult.payout,
+              historyLength: updated.length
+            });
+            
+            return updated;
+          } catch (error) {
+            console.error('AUDIT: Error in game history update:', {
+              error: error.message,
+              gameId: newBetResult.id,
+              sessionId: newBetResult.sessionId
+            });
+            return prev; // Return previous state on error
           }
-          
-          const updated = [newBetResult, ...prev.slice(0, 99)]; // Keep last 100
-          return updated;
         });
         
         // Notify parent component about bet history change
@@ -510,12 +621,13 @@ const PlinkoGame = forwardRef(({ rowCount = 16, riskLevel = "Medium", onRowChang
         // Log game to Movement blockchain
         if (account?.address && latestBetAmount > 0) {
           
-          // Update history to show pending status
+          // Update history to show pending status using unique ID for precise targeting
           setBetHistory(prev => {
-            if (prev.length === 0) return prev;
-            const [first, ...rest] = prev;
-            const updatedFirst = { ...first, movementTxStatus: 'pending' };
-            return [updatedFirst, ...rest];
+            return prev.map(bet => 
+              bet.id === uniqueId 
+                ? { ...bet, movementTxStatus: 'pending' }
+                : bet
+            );
           });
           
           if (onBetHistoryChange) {
@@ -536,16 +648,17 @@ const PlinkoGame = forwardRef(({ rowCount = 16, riskLevel = "Medium", onRowChang
           }).then(res => {
             if (res?.success) {
               
-              // Update history with successful Movement transaction
+              // Update history with successful Movement transaction using unique ID
               setBetHistory(prev => {
-                if (prev.length === 0) return prev;
-                const [first, ...rest] = prev;
-                const updatedFirst = { 
-                  ...first, 
-                  movementTxHash: res.transactionHash || null, 
-                  movementTxStatus: 'confirmed' 
-                };
-                return [updatedFirst, ...rest];
+                return prev.map(bet => 
+                  bet.id === uniqueId 
+                    ? { 
+                        ...bet, 
+                        movementTxHash: res.transactionHash || null, 
+                        movementTxStatus: 'confirmed' 
+                      }
+                    : bet
+                );
               });
               
               if (onBetHistoryChange) {
@@ -557,12 +670,13 @@ const PlinkoGame = forwardRef(({ rowCount = 16, riskLevel = "Medium", onRowChang
               }
             } else {
               
-              // Update history to show failed status
+              // Update history to show failed status using unique ID
               setBetHistory(prev => {
-                if (prev.length === 0) return prev;
-                const [first, ...rest] = prev;
-                const updatedFirst = { ...first, movementTxStatus: 'failed' };
-                return [updatedFirst, ...rest];
+                return prev.map(bet => 
+                  bet.id === uniqueId 
+                    ? { ...bet, movementTxStatus: 'failed' }
+                    : bet
+                );
               });
               
               if (onBetHistoryChange) {
@@ -571,12 +685,13 @@ const PlinkoGame = forwardRef(({ rowCount = 16, riskLevel = "Medium", onRowChang
             }
           }).catch(error => {
             
-            // Update history to show failed status
+            // Update history to show failed status using unique ID
             setBetHistory(prev => {
-              if (prev.length === 0) return prev;
-              const [first, ...rest] = prev;
-              const updatedFirst = { ...first, movementTxStatus: 'failed' };
-              return [updatedFirst, ...rest];
+              return prev.map(bet => 
+                bet.id === uniqueId 
+                  ? { ...bet, movementTxStatus: 'failed' }
+                  : bet
+              );
             });
             
             if (onBetHistoryChange) {
