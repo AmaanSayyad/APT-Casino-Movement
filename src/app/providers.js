@@ -8,10 +8,19 @@ import { WalletStatusProvider } from '@/hooks/useWalletStatus';
 import { NotificationProvider } from '@/components/NotificationSystem';
 import { ThemeProvider } from 'next-themes';
 import { AptosWalletAdapterProvider } from '@aptos-labs/wallet-adapter-react';
+import { AptosConfig, Network } from '@aptos-labs/ts-sdk';
+import { MOVEMENT_BARDOCK } from '@/config/movement';
 import '@aptos-labs/wallet-adapter-ant-design/dist/index.css';
 
 
 const queryClient = new QueryClient();
+
+// Configure Aptos SDK for Movement Bardock testnet
+const movementConfig = new AptosConfig({
+  network: Network.CUSTOM,
+  fullnode: MOVEMENT_BARDOCK.rpcUrl,
+  faucet: MOVEMENT_BARDOCK.faucetEndpoint,
+});
 
 export default function Providers({ children }) {
   const [mounted, setMounted] = React.useState(false);
@@ -27,6 +36,10 @@ export default function Providers({ children }) {
       <AptosWalletAdapterProvider
         plugins={[]}
         autoConnect={true}
+        dappConfig={{
+          network: Network.CUSTOM,
+          aptosConfig: movementConfig
+        }}
         onError={(error) => {
           try {
             const message =
@@ -35,9 +48,9 @@ export default function Providers({ children }) {
                 : error && typeof error === 'object' && 'message' in error
                 ? error.message
                 : JSON.stringify(error);
-            console.error("Aptos wallet error:", message || "Unknown error");
+            console.error("Movement wallet error:", message || "Unknown error");
           } catch (e) {
-            console.error("Aptos wallet error: Unknown error");
+            console.error("Movement wallet error: Unknown error");
           }
         }}
       >

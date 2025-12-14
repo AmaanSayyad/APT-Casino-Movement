@@ -1,0 +1,5 @@
+movement-docs-main/
+node_modules
+.env
+.kiro
+.next

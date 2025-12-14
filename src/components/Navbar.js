@@ -10,6 +10,7 @@ import { useSelector, useDispatch } from 'react-redux';
 import { setBalance, setLoading, loadBalanceFromStorage } from '@/store/balanceSlice';
 import AptosConnectWalletButton from "./AptosConnectWalletButton";
 import WithdrawModal from "./WithdrawModal";
+import NavbarBalance from "./NavbarBalance";
 import dynamic from 'next/dynamic';
 const LiveChat = dynamic(() => import('./LiveChat'), { ssr: false });
 
@@ -17,6 +18,9 @@ const LiveChat = dynamic(() => import('./LiveChat'), { ssr: false });
 import { useNotification } from './NotificationSystem';
 import { UserBalanceSystem, parseAptAmount, aptosClient, TREASURY_ADDRESS } from '@/lib/aptos';
 import { useBackendDeposit } from '@/hooks/useBackendDeposit';
+// Movement hooks will be integrated later when wallet adapter issues are resolved
+// import { useMovementWallet } from '@/hooks/useMovementWallet';
+// import { useMovementBalance } from '@/hooks/useMovementBalance';
 
 // Mock search results for demo purposes
 const MOCK_SEARCH_RESULTS = {
@@ -69,6 +73,22 @@ export default function Navbar() {
   const { connected: isConnected, account, signAndSubmitTransaction, wallet } = useWallet();
   const address = account?.address;
   const isWalletReady = isConnected && account && signAndSubmitTransaction;
+
+  // Movement wallet and balance hooks - temporarily disabled until wallet adapter issues are resolved
+  // const movementWallet = useMovementWallet();
+  // const movementBalance = useMovementBalance();
+  
+  // Temporary placeholder values for Movement integration
+  const movementWallet = {
+    isConnected: isConnected,
+    isCorrectNetwork: true // For now, assume correct network
+  };
+  const movementBalance = {
+    userBalance: BigInt(userBalance || '0'),
+    treasuryAddress: TREASURY_ADDRESS,
+    isLoading: isLoadingBalance,
+    formattedBalance: (parseFloat(userBalance || '0') / 100000000).toFixed(4)
+  };
 
   // Backend deposit hook
   const { deposit: backendDeposit, isDepositing: isBackendDepositing } = useBackendDeposit({ 
@@ -860,25 +880,15 @@ export default function Navbar() {
           
 
           
-          {/* User Balance Display */}
-          {isWalletReady && (
-            <div className="flex items-center space-x-3">
-              <div className="bg-gradient-to-r from-green-900/20 to-green-800/10 rounded-lg border border-green-800/30 px-3 py-2">
-                <div className="flex items-center space-x-2">
-                  <span className="text-xs text-gray-300">Balance:</span>
-                  <span className="text-sm text-green-300 font-medium">
-                    {isLoadingBalance ? 'Loading...' : `${(parseFloat(userBalance) / 100000000).toFixed(3)} APT`}
-                  </span>
-                  <button
-                    onClick={() => setShowBalanceModal(true)}
-                    className="ml-2 text-xs bg-green-600/30 hover:bg-green-500/30 text-green-300 px-2 py-1 rounded transition-colors"
-                  >
-                    Manage
-                  </button>
-                </div>
-              </div>
-            </div>
-          )}
+          {/* Movement Balance Display */}
+          <NavbarBalance
+            balance={movementBalance.userBalance}
+            treasuryAddress={movementBalance.treasuryAddress}
+            isConnected={movementWallet.isConnected && movementWallet.isCorrectNetwork}
+            isLoading={movementBalance.isLoading}
+            onDeposit={() => setShowBalanceModal(true)}
+            onWithdraw={() => setShowBalanceModal(true)}
+          />
           
           {/* Aptos Wallet Button */}
           <AptosConnectWalletButton />
@@ -931,25 +941,36 @@ export default function Navbar() {
               </button>
             </div>
             
-            {/* User Balance in Mobile Menu */}
-            {isWalletReady && (
+            {/* Movement Balance in Mobile Menu */}
+            {movementWallet.isConnected && movementWallet.isCorrectNetwork && (
               <div className="pt-2 mt-2 border-t border-purple-500/10">
-                <div className="p-3 bg-gradient-to-r from-green-900/20 to-green-800/10 rounded-lg border border-green-800/30">
+                <div className="p-3 bg-gradient-to-r from-purple-900/20 to-purple-800/10 rounded-lg border border-purple-800/30">
                   <div className="flex justify-between items-center mb-2">
-                    <span className="text-sm text-gray-300">House Balance:</span>
-                    <span className="text-sm text-green-300 font-medium">
-                      {isLoadingBalance ? 'Loading...' : `${(parseFloat(userBalance) / 100000000).toFixed(3)} APT`}
+                    <span className="text-sm text-gray-300">Balance:</span>
+                    <span className="text-sm text-purple-300 font-medium">
+                      {movementBalance.isLoading ? 'Loading...' : `${movementBalance.formattedBalance} MOVE`}
                     </span>
                   </div>
-                  <button
-                    onClick={() => {
-                      setShowBalanceModal(true);
-                      setShowMobileMenu(false);
-                    }}
-                    className="w-full text-xs bg-green-600/30 hover:bg-green-500/30 text-green-300 px-3 py-2 rounded transition-colors"
-                  >
-                    Manage Balance
-                  </button>
+                  <div className="flex space-x-2">
+                    <button
+                      onClick={() => {
+                        setShowBalanceModal(true);
+                        setShowMobileMenu(false);
+                      }}
+                      className="flex-1 text-xs bg-green-600/30 hover:bg-green-500/30 text-green-300 px-3 py-2 rounded transition-colors"
+                    >
+                      Deposit
+                    </button>
+                    <button
+                      onClick={() => {
+                        setShowBalanceModal(true);
+                        setShowMobileMenu(false);
+                      }}
+                      className="flex-1 text-xs bg-blue-600/30 hover:bg-blue-500/30 text-blue-300 px-3 py-2 rounded transition-colors"
+                    >
+                      Withdraw
+                    </button>
+                  </div>
                 </div>
               </div>
             )}
