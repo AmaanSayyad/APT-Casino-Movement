@@ -1,4 +1,4 @@
-const { Aptos, AptosConfig, Network, Ed25519PrivateKey, Account } = require('@aptos-labs/ts-sdk');
+const { Movement, AptosConfig, Network, Ed25519PrivateKey, Account } = require('@aptos-labs/ts-sdk');
 const dotenv = require('dotenv');
 
 dotenv.config();
@@ -6,7 +6,7 @@ dotenv.config();
 async function deployGameLogger() {
   try {
     const config = new AptosConfig({ network: Network.TESTNET });
-    const aptos = new Aptos(config);
+    const movement = new Aptos(config);
 
     // Create treasury account from private key
     const privateKey = new Ed25519PrivateKey(process.env.TREASURY_PRIVATE_KEY);
@@ -16,7 +16,7 @@ async function deployGameLogger() {
     console.log('Deploying game logger...');
 
     // Initialize the game logger
-    const transaction = await aptos.transaction.build.simple({
+    const transaction = await movement.transaction.build.simple({
       sender: treasuryAccount.accountAddress,
       data: {
         function: `${process.env.NEXT_PUBLIC_CASINO_MODULE_ADDRESS}::game_logger::initialize`,
@@ -24,7 +24,7 @@ async function deployGameLogger() {
       },
     });
 
-    const committedTxn = await aptos.signAndSubmitTransaction({
+    const committedTxn = await movement.signAndSubmitTransaction({
       signer: treasuryAccount,
       transaction,
     });
@@ -32,7 +32,7 @@ async function deployGameLogger() {
     console.log('Transaction Hash:', committedTxn.hash);
 
     // Wait for transaction confirmation
-    const executedTransaction = await aptos.waitForTransaction({
+    const executedTransaction = await movement.waitForTransaction({
       transactionHash: committedTxn.hash,
     });
 

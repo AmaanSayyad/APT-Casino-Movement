@@ -1,4 +1,4 @@
-const { Aptos, AptosConfig, Network, Ed25519PrivateKey, Account } = require('@aptos-labs/ts-sdk');
+const { Movement, AptosConfig, Network, Ed25519PrivateKey, Account } = require('@aptos-labs/ts-sdk');
 const dotenv = require('dotenv');
 
 dotenv.config();
@@ -6,7 +6,7 @@ dotenv.config();
 async function deployContract() {
   try {
     const config = new AptosConfig({ network: Network.TESTNET });
-    const aptos = new Aptos(config);
+    const movement = new Aptos(config);
 
     // Create deployer account from private key
     const privateKey = new Ed25519PrivateKey(process.env.DEPLOYER_PRIVATE_KEY);
@@ -16,12 +16,12 @@ async function deployContract() {
     console.log('Deploying contracts...');
 
     // Build and publish the package
-    const transaction = await aptos.transaction.build.publishPackage({
+    const transaction = await movement.transaction.build.publishPackage({
       account: deployer.accountAddress,
       packageDirectoryPath: './move-contracts',
     });
 
-    const committedTxn = await aptos.signAndSubmitTransaction({
+    const committedTxn = await movement.signAndSubmitTransaction({
       signer: deployer,
       transaction,
     });
@@ -29,7 +29,7 @@ async function deployContract() {
     console.log('Transaction Hash:', committedTxn.hash);
 
     // Wait for transaction confirmation
-    const executedTransaction = await aptos.waitForTransaction({
+    const executedTransaction = await movement.waitForTransaction({
       transactionHash: committedTxn.hash,
     });
 

@@ -5,10 +5,10 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useRouter } from "next/navigation";
-import { useWallet } from '@aptos-labs/wallet-adapter-react';
+// Removed Movement wallet adapter - using Movement wallet instead
 import { useSelector, useDispatch } from 'react-redux';
-import { setBalance, setLoading, loadBalanceFromStorage } from '@/store/balanceSlice';
-import AptosConnectWalletButton from "./AptosConnectWalletButton";
+import { setBalance, setLoading, loadBalanceFromStorage, addToBalance, subtractFromBalance } from '@/store/balanceSlice';
+import MovementWalletButton from "./MovementWalletButton";
 import WithdrawModal from "./WithdrawModal";
 import NavbarBalance from "./NavbarBalance";
 import dynamic from 'next/dynamic';
@@ -16,11 +16,11 @@ const LiveChat = dynamic(() => import('./LiveChat'), { ssr: false });
 
 
 import { useNotification } from './NotificationSystem';
-import { UserBalanceSystem, parseAptAmount, aptosClient, TREASURY_ADDRESS } from '@/lib/aptos';
+import { UserBalanceSystem, parseAptAmount, aptosClient, TREASURY_ADDRESS } from '@/lib/movement';
 import { useBackendDeposit } from '@/hooks/useBackendDeposit';
-// Movement hooks will be integrated later when wallet adapter issues are resolved
-// import { useMovementWallet } from '@/hooks/useMovementWallet';
-// import { useMovementBalance } from '@/hooks/useMovementBalance';
+import { useMovementWallet } from '@/hooks/useMovementWallet';
+import { useMovementBalance } from '@/hooks/useMovementBalance';
+import { useMovementTransactions } from '@/hooks/useMovementTransactions';
 
 // Mock search results for demo purposes
 const MOCK_SEARCH_RESULTS = {
@@ -31,8 +31,8 @@ const MOCK_SEARCH_RESULTS = {
     { id: 'game4', name: 'Plinko', path: '/game/plinko', type: 'Popular' },
   ],
   tournaments: [
-    { id: 'tournament1', name: 'High Roller Tournament', path: '/tournaments/high-roller', prize: '10,000 APTC' },
-    { id: 'tournament2', name: 'Weekend Battle', path: '/tournaments/weekend-battle', prize: '5,000 APTC' },
+    { id: 'tournament1', name: 'High Roller Tournament', path: '/tournaments/high-roller', prize: '10,000 MOVE' },
+    { id: 'tournament2', name: 'Weekend Battle', path: '/tournaments/weekend-battle', prize: '5,000 MOVE' },
   ],
   pages: [
     { id: 'page1', name: 'Bank', path: '/bank', description: 'Deposit and withdraw funds' },
@@ -59,6 +59,8 @@ export default function Navbar() {
   const [showWithdrawModal, setShowWithdrawModal] = useState(false);
   const dispatch = useDispatch();
   const { userBalance, isLoading: isLoadingBalance } = useSelector((state) => state.balance);
+  
+  // Redux balance state available
   const [walletNetworkName, setWalletNetworkName] = useState("");
 
   // User balance management
@@ -69,38 +71,29 @@ export default function Navbar() {
   const [isDepositing, setIsDepositing] = useState(false);
   const [chatOpen, setChatOpen] = useState(true);
 
-  // Wallet connection
-  const { connected: isConnected, account, signAndSubmitTransaction, wallet } = useWallet();
-  const address = account?.address;
-  const isWalletReady = isConnected && account && signAndSubmitTransaction;
-
-  // Movement wallet and balance hooks - temporarily disabled until wallet adapter issues are resolved
-  // const movementWallet = useMovementWallet();
-  // const movementBalance = useMovementBalance();
+  // Movement wallet connection
+  const movementWallet = useMovementWallet();
+  const movementBalance = useMovementBalance();
+  const movementTransactions = useMovementTransactions();
   
-  // Temporary placeholder values for Movement integration
-  const movementWallet = {
-    isConnected: isConnected,
-    isCorrectNetwork: true // For now, assume correct network
-  };
-  const movementBalance = {
-    userBalance: BigInt(userBalance || '0'),
-    treasuryAddress: TREASURY_ADDRESS,
-    isLoading: isLoadingBalance,
-    formattedBalance: (parseFloat(userBalance || '0') / 100000000).toFixed(4)
-  };
+  // Legacy variables for compatibility (can be removed later)
+  const isConnected = movementWallet.isConnected;
+  const address = movementWallet.address;
+  const isWalletReady = movementWallet.isConnected;
 
-  // Backend deposit hook
-  const { deposit: backendDeposit, isDepositing: isBackendDepositing } = useBackendDeposit({ 
-    signAndSubmitTransaction 
-  });
+  // Movement hooks already defined above
+
+  // Backend deposit hook - disabled for Movement integration
+  // const { deposit: backendDeposit, isDepositing: isBackendDepositing } = useBackendDeposit({ 
+  //   signAndSubmitTransaction 
+  // });
 
   // Mock notifications for UI purposes
   const [notifications, setNotifications] = useState([
     {
       id: '1',
       title: 'Balance Updated',
-      message: 'Your APTC balance has been updated',
+      message: 'Your MOVE balance has been updated',
       isRead: false,
       time: '2 min ago'
     },
@@ -135,7 +128,7 @@ export default function Navbar() {
       // First try to load from localStorage
       const savedBalance = loadBalanceFromStorage();
       if (savedBalance && savedBalance !== "0") {
-        console.log('Loading saved balance from localStorage:', savedBalance);
+        // Loading saved balance from localStorage
         dispatch(setBalance(savedBalance));
       } else {
         // If no saved balance, load from blockchain
@@ -147,8 +140,8 @@ export default function Navbar() {
   // Check if wallet was previously connected on page load
   useEffect(() => {
     const checkWalletConnection = async () => {
-      // Check if Aptos wallet extension is available
-      if (window.aptos && window.aptos.account) {
+      // Check if Movement wallet extension is available
+      if (window.movement && window.movement.account) {
         console.log('Wallet already connected on page load');
         // The wallet adapter should automatically reconnect
       }
@@ -167,7 +160,7 @@ export default function Navbar() {
       setIsDarkMode(savedMode === 'true');
     }
     
-    // Aptos wallet integration - simplified for testnet only
+    // Movement wallet integration - simplified for testnet only
     // In development mode, use mock data
     if (isDev) {
       setUserAddress('0x1234...dev');
@@ -221,58 +214,48 @@ export default function Navbar() {
     dispatch(setLoading(false));
   };
 
-  // Handle withdraw from house account
+  // Handle withdraw using Movement transactions
   const handleWithdraw = async () => {
-    if (!isConnected || !account) {
-      notification.error('Please connect your wallet first');
+    if (!movementWallet.isConnected || !movementWallet.address) {
+      notification.error('Please connect your Movement wallet first');
+      return;
+    }
+
+    const currentBalance = parseFloat(userBalance) || 0;
+    if (currentBalance <= 0) {
+      notification.error('No house balance to withdraw');
       return;
     }
 
     try {
       setIsWithdrawing(true);
-      const balanceInApt = parseFloat(userBalance || '0') / 100000000;
-      if (balanceInApt <= 0) {
-        notification.error('No balance to withdraw');
-        return;
+      
+      // Withdraw all house balance
+      const withdrawAmount = currentBalance;
+      
+      // Update house balance first (optimistic update)
+      dispatch(subtractFromBalance(withdrawAmount));
+      
+      // For now, just simulate withdrawal (backend integration needed for actual MOVE transfer)
+      const result = await movementTransactions.requestWithdrawal(withdrawAmount);
+      
+      if (result.success) {
+        notification.success(`Successfully withdrew ${withdrawAmount} MOVE from house balance!`);
+        
+        // Close the modal
+        setShowBalanceModal(false);
+      } else {
+        // Revert balance if failed
+        dispatch(addToBalance(withdrawAmount));
+        throw new Error(result.error || 'Withdrawal request failed');
       }
-
-      // Call backend API to process withdrawal from treasury
-      console.log('🔍 Account object:', account);
-      console.log('🔍 Account address:', account.address);
-      console.log('🔍 Account address type:', typeof account.address);
-      
-      const response = await fetch('/api/withdraw', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          userAddress: account.address,
-          amount: balanceInApt
-        })
-      });
-
-      const result = await response.json();
-
-      if (!response.ok) {
-        throw new Error(result.error || 'Withdrawal failed');
-      }
-
-      // Update user balance to 0 after successful withdrawal
-      dispatch(setBalance('0'));
-      
-      const txHash = result.transactionHash || result.userTxHash || result.txnHash || 'N/A';
-      const txDisplay = typeof txHash === 'string' && txHash.length > 8 
-        ? `${txHash.slice(0, 8)}...` 
-        : txHash;
-      notification.success(`Successfully withdrew ${balanceInApt.toFixed(4)} APT! TX: ${txDisplay}`);
-      
-      // Close the modal
-      setShowBalanceModal(false);
       
     } catch (error) {
       console.error('Withdraw error:', error);
       notification.error(`Withdrawal failed: ${error.message}`);
+      
+      // Revert balance on error
+      dispatch(addToBalance(withdrawAmount));
     } finally {
       setIsWithdrawing(false);
     }
@@ -282,8 +265,8 @@ export default function Navbar() {
   // Wallet reconnection helper
   const reconnectWallet = async () => {
     try {
-      if (window.aptos) {
-        await window.aptos.connect();
+      if (window.movement) {
+        await window.movement.connect();
         notification.success('Wallet reconnected successfully!');
       }
     } catch (error) {
@@ -291,10 +274,10 @@ export default function Navbar() {
     }
   };
 
-  // Handle deposit using direct wallet method (bypasses adapter issues)
+  // Handle deposit using Movement transactions
   const handleDeposit = async () => {
-    if (!isConnected || !account) {
-      notification.error('Please connect your wallet first');
+    if (!movementWallet.isConnected || !movementWallet.address) {
+      notification.error('Please connect your Movement wallet first');
       return;
     }
 
@@ -306,166 +289,23 @@ export default function Navbar() {
 
     setIsDepositing(true);
     try {
-      console.log('💰 DIRECT WALLET DEPOSIT:', { address: account.address, amount });
-      console.log('🔍 WALLET DEBUG INFO:');
-      console.log('├── window.aptos exists:', !!window.aptos);
-      console.log('├── wallet object:', wallet);
-      console.log('├── account object:', account);
-      console.log('├── isConnected:', isConnected);
-      console.log('└── signAndSubmitTransaction:', !!signAndSubmitTransaction);
+      console.log('💰 MOVEMENT DEPOSIT:', { address: movementWallet.address, amount });
       
-      // Step 1: Send APT directly to treasury using wallet's native method
-      const treasuryAddress = TREASURY_ADDRESS;
-      const amountOctas = Math.floor(amount * 100000000);
+      // Use Movement transactions hook
+      const result = await movementTransactions.depositToTreasury(amount);
       
-      console.log('📤 Sending APT to treasury:', { treasuryAddress, amountOctas });
-      
-      // Create the transfer payload (Aptos Wallet Standard)
-      const transferPayload = {
-        type: "entry_function_payload",
-        function: "0x1::coin::transfer",
-        type_arguments: ["0x1::aptos_coin::AptosCoin"],
-        arguments: [treasuryAddress, amountOctas.toString()]
-      };
-
-      // Provide conservative gas options (Petra expects camelCase keys)
-      const txOptions = (() => {
-        const expire = Math.floor(Date.now() / 1000) + 120; // 2 minutes from now
-        return {
-          maxGasAmount: "200000",
-          gasUnitPrice: "100",
-          expireTimestampSecs: String(expire)
-        };
-      })();
-      
-      let transferHash;
-      
-      // Skip wallet adapter completely - use direct wallet API only
-      try {
-        console.log('📤 Using direct wallet API (bypassing adapter)...');
-        console.log('📤 Payload:', transferPayload);
+      if (result.success) {
+        notification.success(`Successfully deposited ${amount} MOVE! TX: ${result.transactionHash?.slice(0, 8)}...`);
+        setDepositAmount("");
         
-        if (!window.aptos) {
-          throw new Error('Petra wallet not detected. Please install Petra wallet.');
-        }
+        // Update house balance in Redux store
+        dispatch(addToBalance(amount));
         
-        if (!window.aptos.signAndSubmitTransaction) {
-          throw new Error('Wallet API not available. Please reconnect your wallet.');
-        }
-        
-        // Ensure wallet is connected/authorized for the current site
-        try {
-          const isConnectedDirect = await window.aptos.isConnected?.();
-          if (!isConnectedDirect) {
-            await window.aptos.connect();
-          }
-        } catch {}
-        
-        // Use direct wallet API with updated payload shape
-        const result = await window.aptos.signAndSubmitTransaction({ payload: transferPayload, options: txOptions });
-        
-        if (!result || !result.hash) {
-          throw new Error('Transaction failed - no hash returned from wallet');
-        }
-        
-        transferHash = result.hash;
-        console.log('✅ Direct wallet API success:', transferHash);
-        
-      } catch (walletError) {
-        console.error('❌ Wallet transaction failed:', walletError);
-        const msg = (() => {
-          try {
-            if (!walletError) return 'Unknown wallet error';
-            // Prefer structured code-based handling when available
-            if (typeof walletError === 'object' && walletError !== null) {
-              const code = walletError.code;
-              if (code === 4001) return 'Transaction cancelled by user';
-              if (code === 4100) return 'Wallet not authorized. Please connect and approve this site in Petra.';
-              const name = walletError.name || walletError.status;
-              const message = walletError.message || '';
-              const combined = `${name ? name + ': ' : ''}${message}`.trim();
-              if (combined.toLowerCase().includes('insufficient')) return 'Insufficient APT balance for transaction';
-              if (combined.toLowerCase().includes('network')) return 'Network error. Please check your connection and try again';
-              return combined || `Wallet error: ${JSON.stringify(walletError)}`;
-            }
-            // Fallback to text parsing
-            const text = typeof walletError === 'string' ? walletError : (walletError.message || JSON.stringify(walletError));
-            if (text.includes('User rejected')) return 'Transaction cancelled by user';
-            if (text.toLowerCase().includes('insufficient')) return 'Insufficient APT balance for transaction';
-            if (text.toLowerCase().includes('network')) return 'Network error. Please check your connection and try again';
-            return `Wallet error: ${text}`;
-          } catch {
-            return 'Unknown wallet error';
-          }
-        })();
-        throw new Error(msg);
+        // Refresh wallet balance
+        movementBalance.refreshWalletBalance();
+      } else {
+        throw new Error(result.error || 'Deposit failed');
       }
-      
-      if (!transferHash) {
-        throw new Error('Transfer failed - no transaction hash');
-      }
-      
-      console.log('✅ APT sent to treasury:', transferHash);
-      
-      // Step 2: Call backend to process deposit
-      console.log('🏦 Processing deposit via backend...');
-      
-      // Derive a normalized user address string (0x + 64 hex) for backend
-      const normalizeAddr = (input) => {
-        try {
-          let addr = '';
-          if (typeof input === 'string') addr = input;
-          else if (input && typeof input === 'object') {
-            if ('address' in input) addr = String(input.address);
-            else if (typeof input.toString === 'function') addr = input.toString();
-          }
-          addr = (addr || '').trim().toLowerCase();
-          let hex = addr.startsWith('0x') ? addr.slice(2) : addr;
-          if (!/^[0-9a-f]+$/.test(hex)) return '';
-          if (hex.length > 64) return '';
-          hex = hex.padStart(64, '0');
-          return `0x${hex}`;
-        } catch { return ''; }
-      };
-      let userAddrForBackend = '';
-      try {
-        const accInfo = await window.aptos?.account?.();
-        userAddrForBackend = normalizeAddr(accInfo?.address);
-      } catch {}
-      if (!userAddrForBackend) {
-        userAddrForBackend = normalizeAddr(account?.address);
-      }
-      console.log('🧭 Backend userAddress:', userAddrForBackend);
-
-      const response = await fetch('/api/deposit', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          userAddress: userAddrForBackend,
-          amount: amount,
-          transactionHash: transferHash
-        })
-      });
-
-      const result = await response.json();
-
-      if (!response.ok) {
-        throw new Error(result.error || 'Backend deposit processing failed');
-      }
-
-      console.log('✅ Deposit processed:', result.transactionHash);
-      
-      // Update local balance
-      const currentBalance = parseFloat(userBalance || '0');
-      const newBalance = (currentBalance + (amount * 100000000)).toString();
-      dispatch(setBalance(newBalance));
-      
-      notification.success(`Successfully deposited ${amount} APT! TX: ${transferHash.slice(0, 8)}...`);
-      setDepositAmount("");
-      
-      // Do not refresh from chain here; backend temp mode does not update on-chain balance
       
     } catch (error) {
       console.error('❌ Deposit failed:', error);
@@ -562,18 +402,18 @@ export default function Navbar() {
     setSearchQuery('');
   };
 
-  // Detect Aptos wallet network (best-effort)
+  // Detect Movement wallet network (best-effort)
   useEffect(() => {
     const readNetwork = async () => {
       try {
-        if (typeof window !== 'undefined' && window.aptos?.network) {
-          const n = await window.aptos.network();
+        if (typeof window !== 'undefined' && window.movement?.network) {
+          const n = await window.movement.network();
           if (n?.name) setWalletNetworkName(String(n.name).toLowerCase());
         }
       } catch {}
     };
     readNetwork();
-    const off = window?.aptos?.onNetworkChange?.((n) => {
+    const off = window?.movement?.onNetworkChange?.((n) => {
       try { setWalletNetworkName(String(n?.name || '').toLowerCase()); } catch {}
     });
     return () => {
@@ -880,18 +720,18 @@ export default function Navbar() {
           
 
           
-          {/* Movement Balance Display */}
+          {/* House Balance Display */}
           <NavbarBalance
-            balance={movementBalance.userBalance}
-            treasuryAddress={movementBalance.treasuryAddress}
+            balance={userBalance}
             isConnected={movementWallet.isConnected && movementWallet.isCorrectNetwork}
-            isLoading={movementBalance.isLoading}
+            isLoading={isLoadingBalance}
             onDeposit={() => setShowBalanceModal(true)}
-            onWithdraw={() => setShowBalanceModal(true)}
           />
           
-          {/* Aptos Wallet Button */}
-          <AptosConnectWalletButton />
+
+          
+          {/* Movement Wallet Button */}
+          <MovementWalletButton />
   
         </div>
       </div>
@@ -948,27 +788,18 @@ export default function Navbar() {
                   <div className="flex justify-between items-center mb-2">
                     <span className="text-sm text-gray-300">Balance:</span>
                     <span className="text-sm text-purple-300 font-medium">
-                      {movementBalance.isLoading ? 'Loading...' : `${movementBalance.formattedBalance} MOVE`}
+                      {isLoadingBalance ? 'Loading...' : `${userBalance} MOVE`}
                     </span>
                   </div>
-                  <div className="flex space-x-2">
+                  <div className="flex">
                     <button
                       onClick={() => {
                         setShowBalanceModal(true);
                         setShowMobileMenu(false);
                       }}
-                      className="flex-1 text-xs bg-green-600/30 hover:bg-green-500/30 text-green-300 px-3 py-2 rounded transition-colors"
+                      className="w-full text-xs bg-green-600/30 hover:bg-green-500/30 text-green-300 px-3 py-2 rounded transition-colors"
                     >
                       Deposit
-                    </button>
-                    <button
-                      onClick={() => {
-                        setShowBalanceModal(true);
-                        setShowMobileMenu(false);
-                      }}
-                      className="flex-1 text-xs bg-blue-600/30 hover:bg-blue-500/30 text-blue-300 px-3 py-2 rounded transition-colors"
-                    >
-                      Withdraw
                     </button>
                   </div>
                 </div>
@@ -1001,7 +832,7 @@ export default function Navbar() {
             aria-modal="true"
           >
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-white">House Balance</h3>
+              <h3 className="text-lg font-semibold text-white">Balance Management</h3>
               <button
                 onClick={() => setShowBalanceModal(false)}
                 className="text-gray-400 hover:text-white transition-colors"
@@ -1012,23 +843,31 @@ export default function Navbar() {
               </button>
             </div>
             
-            {/* Current Balance */}
+            {/* Current House Balance */}
+            <div className="mb-4 p-3 bg-gradient-to-r from-purple-900/20 to-purple-800/10 rounded-lg border border-purple-800/30">
+              <span className="text-sm text-gray-300">House Balance:</span>
+              <div className="text-lg text-purple-300 font-bold">
+                {isLoadingBalance ? 'Loading...' : `${userBalance} MOVE`}
+              </div>
+            </div>
+            
+            {/* Current Wallet Balance */}
             <div className="mb-4 p-3 bg-gradient-to-r from-green-900/20 to-green-800/10 rounded-lg border border-green-800/30">
-              <span className="text-sm text-gray-300">Current Balance:</span>
+              <span className="text-sm text-gray-300">Wallet Balance:</span>
               <div className="text-lg text-green-300 font-bold">
-                {isLoadingBalance ? 'Loading...' : `${(parseFloat(userBalance) / 100000000).toFixed(3)} APT`}
+                {movementBalance.isLoading ? 'Loading...' : movementBalance.formattedWalletBalance + ' MOVE'}
               </div>
             </div>
             
             {/* Deposit Section */}
             <div className="mb-6">
-              <h4 className="text-sm font-medium text-white mb-2">Deposit APT</h4>
+              <h4 className="text-sm font-medium text-white mb-2">Deposit MOVE</h4>
               <div className="flex gap-2">
                 <input
                   type="number"
                   value={depositAmount}
                   onChange={(e) => setDepositAmount(e.target.value)}
-                  placeholder="Enter APT amount"
+                  placeholder="Enter MOVE amount"
                   className="flex-1 px-3 py-2 bg-gray-800/50 border border-gray-600/50 rounded text-white placeholder-gray-400 focus:outline-none focus:border-purple-500/50 focus:ring-1 focus:ring-purple-500/25"
                   min="0"
                   step="0.00000001"
@@ -1055,7 +894,7 @@ export default function Navbar() {
                 </button>
               </div>
               <p className="text-xs text-gray-400 mt-1">
-                Transfer APT from your wallet to house balance for gaming
+                Transfer MOVE from your wallet to treasury for gaming
               </p>
               {/* Quick Deposit Buttons */}
               <div className="flex gap-1 mt-2">
@@ -1066,7 +905,7 @@ export default function Navbar() {
                     className="flex-1 px-2 py-1 text-xs bg-gray-700/50 hover:bg-gray-600/50 text-gray-300 rounded transition-colors"
                     disabled={isDepositing}
                   >
-                    {amount} APT
+                    {amount} MOVE
                   </button>
                 ))}
               </div>
@@ -1074,10 +913,10 @@ export default function Navbar() {
 
             {/* Withdraw Section */}
             <div className="mb-4">
-              <h4 className="text-sm font-medium text-white mb-2">Withdraw All APT</h4>
+              <h4 className="text-sm font-medium text-white mb-2">Withdraw MOVE</h4>
               <button
                 onClick={handleWithdraw}
-                disabled={!isConnected || parseFloat(userBalance || '0') <= 0 || isWithdrawing}
+                disabled={!movementWallet.isConnected || !userBalance || parseFloat(userBalance) <= 0 || isWithdrawing}
                 className="w-full px-4 py-2 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 disabled:from-gray-600 disabled:to-gray-700 disabled:cursor-not-allowed text-white rounded font-medium transition-colors flex items-center justify-center gap-2"
               >
                 {isWithdrawing ? (
@@ -1085,18 +924,18 @@ export default function Navbar() {
                     <div className="animate-spin w-4 h-4 border-2 border-white/20 border-t-white rounded-full"></div>
                     Processing...
                   </>
-                ) : isConnected ? (
-                  parseFloat(userBalance || '0') > 0 ? 'Withdraw All APT' : 'No Balance'
+                ) : movementWallet.isConnected ? (
+                  (userBalance && parseFloat(userBalance) > 0) ? 'Withdraw MOVE' : 'No House Balance'
                 ) : 'Connect Wallet'}
-                {isConnected && parseFloat(userBalance || '0') > 0 && !isWithdrawing && (
+                {movementWallet.isConnected && userBalance && parseFloat(userBalance) > 0 && !isWithdrawing && (
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
                   </svg>
                 )}
               </button>
-              {isConnected && parseFloat(userBalance || '0') > 0 && (
+              {movementWallet.isConnected && userBalance && parseFloat(userBalance) > 0 && (
                 <p className="text-xs text-gray-400 mt-1 text-center">
-                  Withdraw {parseFloat(userBalance || '0') / 100000000} APT to your wallet
+                  Withdraw {userBalance} MOVE from your house balance
                 </p>
               )}
             </div>

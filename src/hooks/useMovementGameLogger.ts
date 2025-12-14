@@ -8,13 +8,14 @@
 import { useState, useCallback } from 'react';
 import { Aptos, AptosConfig, Network } from '@aptos-labs/ts-sdk';
 import { useWallet } from '@aptos-labs/wallet-adapter-react';
-import { MOVEMENT_BARDOCK, MOVEMENT_ENV_CONFIG, getMovementExplorerTxUrl } from '@/config/movement';
+import { MOVEMENT_BARDOCK, MOVEMENT_ENV_CONFIG } from '@/config/movement';
 import { 
   storeGameTransaction, 
   updateTransactionStatus, 
   getTransactionHashByGameId,
   getPendingTransactions,
-  cleanupOldEntries 
+  cleanupOldEntries,
+  findStoredTransactionByHash
 } from '@/lib/gameHistoryStorage';
 
 // Game type constants matching the Move contract
@@ -68,25 +69,21 @@ export interface UseMovementGameLogger {
 export function useMovementGameLogger(): UseMovementGameLogger {
   const [isLogging, setIsLogging] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const { account, signAndSubmitTransaction } = useWallet();
+  const { account } = useWallet();
 
-  // Initialize Aptos client for Movement Bardock
+  // Initialize Movement client for Movement Bardock (only used for reading game history)
   const aptosConfig = new AptosConfig({
     network: Network.CUSTOM,
     fullnode: MOVEMENT_BARDOCK.rpcUrl,
   });
-  const aptos = new Aptos(aptosConfig);
+  const movement = new Aptos(aptosConfig);
 
   /**
-   * Log a game result to Movement blockchain with retry logic
+   * Log a game result to Movement blockchain via API endpoint
    */
   const logGame = useCallback(async (params: GameLogParams): Promise<LogResult> => {
     if (!account?.address) {
       return { success: false, error: 'Wallet not connected' };
-    }
-
-    if (!MOVEMENT_ENV_CONFIG.treasuryAddress) {
-      return { success: false, error: 'Treasury address not configured' };
     }
 
     setIsLogging(true);
@@ -94,80 +91,80 @@ export function useMovementGameLogger(): UseMovementGameLogger {
 
     const maxRetries = 3;
     let lastError: string = '';
+    let pendingTxHash: string | null = null;
+
+    // Create a single pending transaction entry at the start
+    pendingTxHash = `pending_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    storeGameTransaction(pendingTxHash, {
+      gameType: params.gameType,
+      playerAddress: params.playerAddress,
+      betAmount: params.betAmount.toString(),
+      result: params.result,
+      payout: params.payout.toString(),
+    });
 
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
       try {
-        console.log(`🎯 Logging game to Movement (attempt ${attempt}/${maxRetries}):`, {
-          gameType: params.gameType,
-          playerAddress: params.playerAddress,
-          betAmount: params.betAmount.toString(),
-          result: params.result,
-          payout: params.payout.toString(),
-          randomSeed: params.randomSeed.toString(),
-        });
+        // Logging game to Movement via API (attempt ${attempt}/${maxRetries})
 
-        // Build transaction payload
-        const transaction = {
-          type: "entry_function_payload",
-          function: `${MOVEMENT_ENV_CONFIG.gameLoggerAddress}::game_logger::log_game`,
-          functionArguments: [
-            GAME_TYPES[params.gameType], // game_type: u8
-            params.playerAddress,        // player_address: String
-            params.betAmount.toString(), // bet_amount: u64
-            params.result,              // result: String
-            params.payout.toString(),   // payout: u64
-            params.randomSeed.toString(), // random_seed: u64
-          ],
-        };
-
-        // Submit transaction using wallet adapter (same pattern as balance hook)
-        const response = await (signAndSubmitTransaction as any)(transaction);
-
-        // Wait for transaction confirmation
-        const txResult = await aptos.waitForTransaction({
-          transactionHash: response.hash,
-        });
-
-        if (txResult.success) {
-          const explorerUrl = getMovementExplorerTxUrl(response.hash);
-          
-          console.log('✅ Game successfully logged to Movement:');
-          console.log('├── Transaction Hash:', response.hash);
-          console.log('├── Explorer URL:', explorerUrl);
-          console.log('├── Game Type:', params.gameType);
-          console.log('├── Player:', params.playerAddress);
-          console.log('├── Bet Amount:', params.betAmount.toString(), 'octas');
-          console.log('├── Result:', params.result);
-          console.log('├── Payout:', params.payout.toString(), 'octas');
-          console.log('└── Random Seed:', params.randomSeed.toString());
-
-          // Store transaction hash in local storage for history
-          storeGameTransaction(response.hash, {
+        // Call the API endpoint
+        const response = await fetch('/api/log-game', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
             gameType: params.gameType,
             playerAddress: params.playerAddress,
-            betAmount: params.betAmount.toString(),
+            betAmount: Number(params.betAmount) / 100000000, // Convert octas to MOVE
             result: params.result,
-            payout: params.payout.toString(),
-          });
+            payout: Number(params.payout) / 100000000, // Convert octas to MOVE
+            randomSeed: params.randomSeed.toString(),
+          }),
+        });
 
-          // Update status to confirmed
-          updateTransactionStatus(response.hash, 'confirmed');
+        const result = await response.json();
+
+        if (response.ok && result.success) {
+          // Game successfully logged to Movement via API
+
+          // Update the existing pending transaction with the real transaction hash
+          if (result.transactionHash && pendingTxHash) {
+            // Remove the pending entry
+            const pendingEntry = findStoredTransactionByHash(pendingTxHash);
+            if (pendingEntry) {
+              localStorage.removeItem(pendingEntry.key);
+            }
+
+            // Store the successful transaction
+            storeGameTransaction(result.transactionHash, {
+              gameType: params.gameType,
+              playerAddress: params.playerAddress,
+              betAmount: params.betAmount.toString(),
+              result: params.result,
+              payout: params.payout.toString(),
+            });
+
+            // Update status to confirmed
+            updateTransactionStatus(result.transactionHash, 'confirmed');
+          }
 
           // Cleanup old entries periodically
           cleanupOldEntries();
 
+          setIsLogging(false);
           return {
             success: true,
-            transactionHash: response.hash,
-            explorerUrl,
+            transactionHash: result.transactionHash,
+            explorerUrl: result.explorerUrl,
           };
         } else {
-          lastError = `Transaction failed: ${txResult.vm_status}`;
-          console.warn(`⚠️ Attempt ${attempt} failed:`, lastError);
+          lastError = result.error || 'API request failed';
+          // Attempt ${attempt} failed: ${lastError}
         }
       } catch (err: any) {
-        lastError = err.message || 'Unknown error occurred';
-        console.warn(`⚠️ Attempt ${attempt} failed:`, lastError);
+        lastError = err.message || 'Network error occurred';
+        // Attempt ${attempt} failed: ${lastError}
         
         // If it's the last attempt, don't wait
         if (attempt < maxRetries) {
@@ -178,48 +175,37 @@ export function useMovementGameLogger(): UseMovementGameLogger {
       }
     }
 
-    // All retries failed - mark as pending
+    // All retries failed - mark the existing pending transaction as failed
     const errorMsg = `Failed to log game after ${maxRetries} attempts: ${lastError}`;
     setError(errorMsg);
-    console.error('❌', errorMsg);
+    // Failed to log game after retries
 
-    // Store as pending transaction for potential manual retry later
-    const pendingTxHash = `pending_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-    storeGameTransaction(pendingTxHash, {
-      gameType: params.gameType,
-      playerAddress: params.playerAddress,
-      betAmount: params.betAmount.toString(),
-      result: params.result,
-      payout: params.payout.toString(),
-    });
+    // Mark the existing pending transaction as failed
+    if (pendingTxHash) {
+      updateTransactionStatus(pendingTxHash, 'failed');
+    }
 
-    // Mark as failed status
-    updateTransactionStatus(pendingTxHash, 'failed');
+    // Stored failed game log as pending
 
-    console.log('📝 Stored failed game log as pending:', {
-      pendingTxHash,
-      gameType: params.gameType,
-      error: errorMsg,
-    });
-
+    setIsLogging(false);
     return { 
       success: false, 
       error: errorMsg,
       transactionHash: pendingTxHash, // Return pending hash for tracking
     };
-  }, [account, signAndSubmitTransaction, aptos]);
+  }, [account]);
 
   /**
    * Get game history from Movement blockchain
    */
   const getGameHistory = useCallback(async (limit = 50): Promise<GameHistoryEntry[]> => {
     if (!MOVEMENT_ENV_CONFIG.treasuryAddress) {
-      console.error('Treasury address not configured');
+      // Treasury address not configured
       return [];
     }
 
     try {
-      const result = await aptos.view({
+      const result = await movement.view({
         payload: {
           function: `${MOVEMENT_ENV_CONFIG.gameLoggerAddress}::game_logger::get_game_history`,
           functionArguments: [MOVEMENT_ENV_CONFIG.treasuryAddress],
@@ -246,10 +232,10 @@ export function useMovementGameLogger(): UseMovementGameLogger {
 
       return [];
     } catch (error) {
-      console.error('Error fetching game history from Movement:', error);
+      // Error fetching game history from Movement
       return [];
     }
-  }, [aptos]);
+  }, [movement]);
 
   /**
    * Retry all pending game logs
@@ -260,7 +246,7 @@ export function useMovementGameLogger(): UseMovementGameLogger {
     let successful = 0;
     let failed = 0;
 
-    console.log(`🔄 Retrying ${pendingLogs.length} pending game logs...`);
+    // Retrying pending game logs
 
     for (const pendingLog of pendingLogs) {
       if (pendingLog.status === 'failed' && pendingLog.transactionHash.startsWith('pending_')) {
@@ -286,7 +272,7 @@ export function useMovementGameLogger(): UseMovementGameLogger {
             failed++;
           }
         } catch (error) {
-          console.error('Error retrying pending log:', error);
+          // Error retrying pending log
           failed++;
         }
 
@@ -295,7 +281,7 @@ export function useMovementGameLogger(): UseMovementGameLogger {
       }
     }
 
-    console.log(`✅ Retry completed: ${successful}/${attempted} successful, ${failed} failed`);
+    // Retry completed
     
     return { attempted, successful, failed };
   }, [logGame]);

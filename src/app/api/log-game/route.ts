@@ -1,8 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { Aptos, AptosConfig, Network, Ed25519PrivateKey, Account } from '@aptos-labs/ts-sdk';
+import { MOVEMENT_BARDOCK } from '@/config/movement';
 
-const config = new AptosConfig({ network: Network.TESTNET });
-const aptos = new Aptos(config);
+// Movement Bardock testnet configuration
+const config = new AptosConfig({ 
+  network: Network.CUSTOM,
+  fullnode: MOVEMENT_BARDOCK.rpcUrl,
+  faucet: MOVEMENT_BARDOCK.faucetEndpoint,
+  indexer: MOVEMENT_BARDOCK.indexerUrl,
+});
+const movement = new Aptos(config);
 
 // Game types mapping
 const GAME_TYPES = {
@@ -15,10 +22,10 @@ const GAME_TYPES = {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { gameType, playerAddress, betAmount, result, payout } = body;
+    const { gameType, playerAddress, betAmount, result, payout, randomSeed } = body;
 
     // Validate input
-    if (!gameType || !playerAddress || !betAmount || !result || payout === undefined) {
+    if (!gameType || !playerAddress || !betAmount || !result || payout === undefined || !randomSeed) {
       return NextResponse.json(
         { error: 'Missing required fields' },
         { status: 400 }
@@ -37,19 +44,28 @@ export async function POST(request: NextRequest) {
     if (!rawPk) {
       return NextResponse.json({ error: 'TREASURY_PRIVATE_KEY missing' }, { status: 500 });
     }
-    const privateKey = new Ed25519PrivateKey(rawPk.startsWith('0x') ? rawPk : `0x${rawPk}`);
+    
+    // Handle Movement private key format: ed25519-priv-0x...
+    let cleanPrivateKey = rawPk;
+    if (rawPk.startsWith('ed25519-priv-0x')) {
+      cleanPrivateKey = rawPk.replace('ed25519-priv-0x', '0x');
+    } else if (!rawPk.startsWith('0x')) {
+      cleanPrivateKey = `0x${rawPk}`;
+    }
+    
+    const privateKey = new Ed25519PrivateKey(cleanPrivateKey);
     const treasuryAccount = Account.fromPrivateKey({ privateKey });
 
     // Ensure GameLog resource exists for treasury; if not, initialize
-    const moduleAddr = process.env.NEXT_PUBLIC_CASINO_MODULE_ADDRESS!;
+    const moduleAddr = process.env.NEXT_PUBLIC_MOVEMENT_GAME_LOGGER_ADDRESS!;
     try {
-      await aptos.getAccountResource({
+      await movement.getAccountResource({
         accountAddress: String(treasuryAccount.accountAddress),
         resourceType: `${moduleAddr}::game_logger::GameLog`,
       });
     } catch {
       // Initialize logger
-      const initTx = await aptos.transaction.build.simple({
+      const initTx = await movement.transaction.build.simple({
         sender: treasuryAccount.accountAddress,
         data: {
           function: `${moduleAddr}::game_logger::initialize`,
@@ -57,7 +73,7 @@ export async function POST(request: NextRequest) {
         },
         options: { maxGasAmount: 200000, gasUnitPrice: 100 },
       });
-      await aptos.signAndSubmitTransaction({ signer: treasuryAccount, transaction: initTx });
+      await movement.signAndSubmitTransaction({ signer: treasuryAccount, transaction: initTx });
     }
 
     // Normalize amounts to octas (u64) and player address to string
@@ -67,16 +83,17 @@ export async function POST(request: NextRequest) {
     const playerStr = String(playerAddress);
 
     // Build transaction
-    const transaction = await aptos.transaction.build.simple({
+    const transaction = await movement.transaction.build.simple({
       sender: treasuryAccount.accountAddress,
       data: {
-        function: `${process.env.NEXT_PUBLIC_CASINO_MODULE_ADDRESS}::game_logger::log_game`,
+        function: `${process.env.NEXT_PUBLIC_MOVEMENT_GAME_LOGGER_ADDRESS}::game_logger::log_game`,
         functionArguments: [
           GAME_TYPES[gameType as keyof typeof GAME_TYPES], // game_type
           playerStr, // player_address
           betAmountOctas, // bet_amount
           result, // result
           payoutOctas, // payout
+          randomSeed.toString(), // random_seed
         ],
       },
       options: {
@@ -86,40 +103,37 @@ export async function POST(request: NextRequest) {
     });
 
     // Sign and submit transaction
-    const committedTxn = await aptos.signAndSubmitTransaction({
+    const committedTxn = await movement.signAndSubmitTransaction({
       signer: treasuryAccount,
       transaction,
     });
 
     // Wait for transaction confirmation
-    const executedTransaction = await aptos.waitForTransaction({
+    const executedTransaction = await movement.waitForTransaction({
       transactionHash: committedTxn.hash,
     });
 
     // Console log for debugging
-    console.log('🎮 GAME LOGGED TO BLOCKCHAIN:');
+    console.log('🎮 GAME LOGGED TO MOVEMENT BLOCKCHAIN:');
     console.log('├── Game Type:', gameType);
     console.log('├── Player:', playerAddress);
-    console.log('├── Bet Amount:', betAmount, 'APT');
+    console.log('├── Bet Amount:', betAmount, 'MOVE');
     console.log('├── Result:', result);
-    console.log('├── Payout:', payout, 'APT');
+    console.log('├── Payout:', payout, 'MOVE');
+    console.log('├── Random Seed:', randomSeed);
     console.log('├── Transaction Hash:', committedTxn.hash);
     console.log('├── Treasury Address:', treasuryAccount.accountAddress.toString());
-    console.log('├── Gas Used:', executedTransaction.gas_used);
-    console.log('├── Gas Price:', executedTransaction.gas_unit_price);
-    console.log('├── Sequence Number:', executedTransaction.sequence_number);
     console.log('├── VM Status:', executedTransaction.vm_status);
     console.log('├── Success:', executedTransaction.success);
-    console.log('├── Timestamp:', new Date(Number(executedTransaction.timestamp) / 1000).toISOString());
-    console.log('├── 🎲 Randomness generated on-chain by Aptos');
+    console.log('├── 🎲 Random seed provided by client');
     console.log('├── 🔐 Transaction signed by Treasury wallet');
-    console.log('└── 🌐 Explorer URL:', `https://explorer.aptoslabs.com/txn/${committedTxn.hash}?network=testnet`);
+    console.log('└── 🌐 Explorer URL:', `https://explorer.movementnetwork.xyz/txn/${committedTxn.hash}?network=bardock+testnet`);
 
     return NextResponse.json({
       success: true,
       transactionHash: committedTxn.hash,
       gameLogged: true,
-      explorerUrl: `https://explorer.aptoslabs.com/txn/${committedTxn.hash}?network=testnet`,
+      explorerUrl: `https://explorer.movementnetwork.xyz/txn/${committedTxn.hash}?network=bardock+testnet`,
     });
 
   } catch (error: any) {

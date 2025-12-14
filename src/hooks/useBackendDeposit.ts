@@ -41,10 +41,10 @@ export const useBackendDeposit = (props?: UseBackendDepositProps) => {
     try {
       console.log('🏦 STARTING BACKEND DEPOSIT:');
       console.log('├── User Address:', account.address);
-      console.log('├── Amount:', amount, 'APT');
-      console.log('└── Step 1: Sending APT to Treasury...');
+      console.log('├── Amount:', amount, 'MOVE');
+      console.log('└── Step 1: Sending MOVE to Treasury...');
 
-      // Step 1: Send APT to treasury address
+      // Step 1: Send MOVE to treasury address
       const treasuryAddress = process.env.NEXT_PUBLIC_CASINO_MODULE_ADDRESS!;
       const amountOctas = Math.floor(amount * 100000000);
 
@@ -124,7 +124,7 @@ export const useBackendDeposit = (props?: UseBackendDepositProps) => {
       console.log('├── Explorer URL:', backendData.explorerUrl);
       console.log('└── Success!');
 
-      toast.success(`Successfully deposited ${amount} APT! Balance updated.`);
+      toast.success(`Successfully deposited ${amount} MOVE! Balance updated.`);
 
       return {
         success: true,

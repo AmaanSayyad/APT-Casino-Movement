@@ -1,4 +1,4 @@
-const { Aptos, AptosConfig, Network, Ed25519PrivateKey, Account } = require('@aptos-labs/ts-sdk');
+const { Movement, AptosConfig, Network, Ed25519PrivateKey, Account } = require('@aptos-labs/ts-sdk');
 const dotenv = require('dotenv');
 
 dotenv.config();
@@ -6,7 +6,7 @@ dotenv.config();
 async function testGameLogger() {
   try {
     const config = new AptosConfig({ network: Network.TESTNET });
-    const aptos = new Aptos(config);
+    const movement = new Aptos(config);
 
     // Create treasury account from private key
     const privateKey = new Ed25519PrivateKey(process.env.TREASURY_PRIVATE_KEY);
@@ -21,16 +21,16 @@ async function testGameLogger() {
     // Test logging a game
     console.log('📝 Logging test game...');
     
-    const transaction = await aptos.transaction.build.simple({
+    const transaction = await movement.transaction.build.simple({
       sender: treasuryAccount.accountAddress,
       data: {
         function: `${process.env.NEXT_PUBLIC_CASINO_MODULE_ADDRESS}::game_logger::log_game`,
         functionArguments: [
           1, // game_type (plinko)
           "0x1234567890abcdef1234567890abcdef12345678", // player_address
-          100, // bet_amount (1 APT in smallest unit)
+          100, // bet_amount (1 MOVE in smallest unit)
           "16rows_Medium_bin8_5.6x", // result
-          560, // payout (5.6 APT in smallest unit)
+          560, // payout (5.6 MOVE in smallest unit)
         ],
       },
       options: {
@@ -39,7 +39,7 @@ async function testGameLogger() {
       },
     });
 
-    const committedTxn = await aptos.signAndSubmitTransaction({
+    const committedTxn = await movement.signAndSubmitTransaction({
       signer: treasuryAccount,
       transaction,
     });
@@ -50,14 +50,14 @@ async function testGameLogger() {
     console.log('');
 
     // Wait for transaction confirmation
-    await aptos.waitForTransaction({
+    await movement.waitForTransaction({
       transactionHash: committedTxn.hash,
     });
 
     // Test reading game history
     console.log('📖 Reading game history...');
     
-    const historyData = await aptos.view({
+    const historyData = await movement.view({
       payload: {
         function: `${process.env.NEXT_PUBLIC_CASINO_MODULE_ADDRESS}::game_logger::get_game_history`,
         functionArguments: [treasuryAccount.accountAddress.toString()],

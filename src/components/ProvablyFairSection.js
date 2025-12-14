@@ -10,25 +10,25 @@ const ProvablyFairSection = () => {
     {
       id: 1,
       title: 'On-Chain Randomness Request',
-      description: 'When you place a bet, our smart contract requests randomness from Aptos\'s on-chain randomness module. This happens directly on the blockchain, ensuring no manipulation is possible.',
+      description: 'When you place a bet, our smart contract requests randomness from Movement\'s on-chain randomness module. This happens directly on the blockchain, ensuring no manipulation is possible.',
       icon: 'randomness-request'
     },
     {
       id: 2,
-      title: 'Aptos Randomness Module',
-      description: 'Aptos\'s built-in randomness module (Aptos Roll) generates cryptographically secure random numbers using verifiable random functions (VRF). The randomness is generated on-chain and is publicly verifiable.',
-      icon: 'aptos-randomness'
+      title: 'Movement Randomness Module',
+      description: 'Movement\'s built-in randomness module (Movement Roll) generates cryptographically secure random numbers using verifiable random functions (VRF). The randomness is generated on-chain and is publicly verifiable.',
+      icon: 'movement-randomness'
     },
     {
       id: 3,
       title: 'Game Result Calculation',
-      description: 'The game result is calculated directly in the smart contract using the on-chain random number. Since everything happens on-chain, you can verify the result by checking the transaction on Aptos Explorer.',
+      description: 'The game result is calculated directly in the smart contract using the on-chain random number. Since everything happens on-chain, you can verify the result by checking the transaction on Movement Explorer.',
       icon: 'calculation'
     },
     {
       id: 4,
       title: 'Blockchain Verification',
-      description: 'Every game result is permanently recorded on the Aptos blockchain. You can verify any game by checking the transaction hash on Aptos Explorer, ensuring complete transparency and fairness.',
+      description: 'Every game result is permanently recorded on the Movement blockchain. You can verify any game by checking the transaction hash on Movement Explorer, ensuring complete transparency and fairness.',
       icon: 'verification'
     },
   ];
@@ -52,8 +52,8 @@ const ProvablyFairSection = () => {
               <div className="bg-[#1A0015] rounded-xl p-6 h-full">
                 <h3 className="text-white text-xl font-medium mb-4">What is Provably Fair?</h3>
                 <p className="text-white/80 mb-6">
-                  Provably Fair gaming on Aptos uses the blockchain's built-in on-chain randomness module to ensure complete transparency and fairness. 
-                  Unlike traditional online casinos that operate as "black boxes," our system uses Aptos's verifiable random functions (VRF) 
+                  Provably Fair gaming on Movement uses the blockchain's built-in on-chain randomness module to ensure complete transparency and fairness. 
+                  Unlike traditional online casinos that operate as "black boxes," our system uses Movement's verifiable random functions (VRF) 
                   to generate game outcomes directly on-chain, making every result independently verifiable.
                 </p>
                 
@@ -126,9 +126,9 @@ const ProvablyFairSection = () => {
                   <div className="bg-[#0D0D0D] rounded-lg p-4 overflow-x-auto">
                     <pre className="text-sm text-green-400 font-mono">
                       {activeTab === 1 && '// Smart contract requests randomness\n#[randomness]\nentry fun place_bet(user: &signer, amount: u64) {\n    // Request on-chain randomness\n    let random = randomness::u64_range(0, 37);\n    // Use random number for game result\n}'}
-                      {activeTab === 2 && '// Aptos Randomness Module (Aptos Roll)\nuse aptos_framework::randomness;\n\n// Generate random number in range [0, 36]\nlet roll: u8 = (randomness::u64_range(0, 37) as u8);\n\n// Randomness is cryptographically secure\n// and verifiable on-chain'}
-                      {activeTab === 3 && '// Calculate game result on-chain\nlet (win, payout) = settle(\n    amount, \n    bet_kind, \n    bet_value, \n    roll  // From Aptos randomness\n);\n\n// Result is deterministic and verifiable\n// All logic is in smart contract'}
-                      {activeTab === 4 && '// Verify on Aptos Explorer\n// Transaction hash: 0x...\n// View transaction details:\n// - Random number used\n// - Game result\n// - Payout amount\n\n// All data is on-chain and immutable'}
+                      {activeTab === 2 && '// Movement Randomness Module (Movement Roll)\nuse aptos_framework::randomness;\n\n// Generate random number in range [0, 36]\nlet roll: u8 = (randomness::u64_range(0, 37) as u8);\n\n// Randomness is cryptographically secure\n// and verifiable on-chain'}
+                      {activeTab === 3 && '// Calculate game result on-chain\nlet (win, payout) = settle(\n    amount, \n    bet_kind, \n    bet_value, \n    roll  // From Movement randomness\n);\n\n// Result is deterministic and verifiable\n// All logic is in smart contract'}
+                      {activeTab === 4 && '// Verify on Movement Explorer\n// Transaction hash: 0x...\n// View transaction details:\n// - Random number used\n// - Game result\n// - Payout amount\n\n// All data is on-chain and immutable'}
                     </pre>
                   </div>
                 </div>

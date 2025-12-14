@@ -15,9 +15,9 @@ jest.mock('@aptos-labs/wallet-adapter-react', () => ({
   }),
 }));
 
-// Mock the Aptos SDK
+// Mock the Movement SDK
 jest.mock('@aptos-labs/ts-sdk', () => ({
-  Aptos: jest.fn().mockImplementation(() => ({
+  Movement: jest.fn().mockImplementation(() => ({
     waitForTransaction: jest.fn(),
     view: jest.fn(),
   })),

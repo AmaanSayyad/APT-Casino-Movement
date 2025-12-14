@@ -1,0 +1,10 @@
+{
+  "address": "0x65427119abb14cdab8fc71ea8d83aebd5ec36b8a1ac43db3bb9cf046c150c6ea",
+  "privateKey": "ed25519-priv-0x8dc4f13fa2820f1b1ee725288c8ccf2b4098db47a95e84c82a3f866ec5f0bd56",
+  "publicKey": "0xca2f5026d88d2c01866b8bc4216935d6d9f9d54b3978d1e61a2303917b81573b",
+  "network": "Movement Bardock Testnet",
+  "chainId": 250,
+  "rpcUrl": "https://testnet.movementnetwork.xyz/v1",
+  "faucetUrl": "https://faucet.movementnetwork.xyz",
+  "explorerUrl": "https://explorer.movementnetwork.xyz/?network=bardock+testnet"
+}

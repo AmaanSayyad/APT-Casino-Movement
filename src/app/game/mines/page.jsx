@@ -19,7 +19,6 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useTheme } from "next-themes";
 import useWalletStatus from '@/hooks/useWalletStatus';
 import AptosConnectWalletButton from '@/components/AptosConnectWalletButton';
-import { useGameLogger } from '@/hooks/useGameLogger';
 import { useMovementGameLogger } from '@/hooks/useMovementGameLogger';
 import { useWallet } from '@aptos-labs/wallet-adapter-react';
 import Image from "next/image";
@@ -39,7 +38,6 @@ export default function Mines() {
   const [gameHistory, setGameHistory] = useState([]);
   
   // Game logging hooks
-  const { logGame } = useGameLogger();
   const { logGame: logMovementGame } = useMovementGameLogger();
   const { account } = useWallet();
   
@@ -194,46 +192,22 @@ export default function Mines() {
 
   // Handle game completion (only when game ends - cashout or mine hit)
   const handleGameComplete = (result) => {
-    // Generate random seed for entropy (timestamp + random for uniqueness)
+    // Generate random seed (timestamp + random for uniqueness)
     const randomSeed = BigInt(Date.now() * 1000 + Math.floor(Math.random() * 1000));
     
     const newHistoryItem = {
       id: Date.now(),
       mines: result.mines || 0,
-      bet: `${result.betAmount || 0} APT`,
+      bet: `${result.betAmount || 0} MOVE`,
       outcome: result.won ? 'win' : 'loss',
-      payout: result.won ? `${result.payout || 0} APT` : '0 APT',
+      payout: result.won ? `${result.payout || 0} MOVE` : '0 MOVE',
       multiplier: result.won ? `${result.multiplier || 0}x` : '0x',
       time: 'Just now',
       txHash: null,
-      entropyProof: null, // Will be populated when Pyth entropy is integrated
       movementTxHash: null,
       movementTxStatus: 'none'
     };
     setGameHistory(prev => [newHistoryItem, ...prev].slice(0, 50));
-    
-    // Log game to blockchain (existing system)
-    if (account?.address && result.betAmount > 0) {
-      const gameResult = `${result.mines}mines_${result.won ? 'win' : 'loss'}_${result.multiplier || 0}x`;
-      logGame({
-        gameType: 'mines',
-        playerAddress: account.address,
-        betAmount: result.betAmount,
-        result: gameResult,
-        payout: result.payout || 0,
-      }).then(res => {
-        if (res?.success) {
-          setGameHistory(prev => {
-            if (prev.length === 0) return prev;
-            const [first, ...rest] = prev;
-            const updatedFirst = { ...first, txHash: res.transactionHash || null };
-            return [updatedFirst, ...rest];
-          });
-        }
-      }).catch(error => {
-        console.error('Failed to log mines game:', error);
-      });
-    }
     
     // Log game to Movement blockchain
     if (account?.address && result.betAmount > 0) {

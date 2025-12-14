@@ -66,7 +66,6 @@ const GameHistory = ({ gameHistory }) => {
                 <th className="py-6 px-4 font-medium">Bet amount</th>
                 <th className="py-6 px-4 font-medium">Multiplier</th>
                 <th className="py-6 px-4 font-medium">Payout</th>
-                <th className="py-6 px-4 font-medium">Entropy</th>
                 <th className="py-6 px-4 font-medium">Movement</th>
               </tr>
             </thead>
@@ -103,21 +102,6 @@ const GameHistory = ({ gameHistory }) => {
                           className=""
                         />  
                       </span>
-                    </td>
-                    <td className="py-6 px-4">
-                      {item.entropyProof ? (
-                        <a 
-                          href={item.entropyProof}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-blue-400 hover:text-blue-300 underline text-sm"
-                          title="View Pyth Entropy Proof"
-                        >
-                          Entropy
-                        </a>
-                      ) : (
-                        <span className="text-gray-500 text-sm">N/A</span>
-                      )}
                     </td>
                     <td className="py-6 px-4">
                       <div className="flex justify-center">

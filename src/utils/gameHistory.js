@@ -309,9 +309,9 @@ export const exportGameHistoryCSV = (games, userAddress) => {
       'Game Type': game.gameType,
       'Result': formattedResult.primary,
       'Details': formattedResult.secondary,
-      'Bet Amount (ETH)': (parseFloat(game.betAmount || 0) / 1e18).toFixed(6),
-      'Payout (ETH)': (parseFloat(game.payoutAmount || 0) / 1e18).toFixed(6),
-      'Profit/Loss (ETH)': (parseFloat(game.profitLoss || 0) / 1e18).toFixed(6),
+      'Bet Amount (MOVE)': (parseFloat(game.betAmount || 0) / 1e18).toFixed(6),
+      'Payout (MOVE)': (parseFloat(game.payoutAmount || 0) / 1e18).toFixed(6),
+      'Profit/Loss (MOVE)': (parseFloat(game.profitLoss || 0) / 1e18).toFixed(6),
       'Multiplier': game.multiplier?.toFixed(2) || '0.00',
       'Win/Loss': game.isWin ? 'WIN' : 'LOSS',
       'VRF Transaction': game.vrfDetails?.transactionHash || 'N/A',
@@ -370,7 +370,7 @@ export const getEtherscanUrl = (transactionHash, network = 'sepolia') => {
 };
 
 /**
- * Format ETH amount for display
+ * Format MOVE amount for display
  * @param {string|number} amount - Amount in wei
  * @param {number} decimals - Number of decimal places
  * @returns {string} Formatted amount

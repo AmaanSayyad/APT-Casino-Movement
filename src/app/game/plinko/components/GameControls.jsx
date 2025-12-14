@@ -86,15 +86,16 @@ export default function GameControls({ onBet, onRowChange, onRiskLevelChange, on
     const currentBalanceReduxUnit = parseFloat(userBalance);
     const currentBalanceAPT = currentBalanceReduxUnit / 100000000;
     
-    console.log('handleBet called with betValue:', betValue, 'currentBalance (APT):', currentBalanceAPT);
+    console.log('handleBet called with betValue:', betValue, 'currentBalance (MOVE):', currentBalanceAPT);
     
     if (betValue <= 0) {
       alert("Please enter a valid bet amount");
       return;
     }
     
-    if (betValue > currentBalanceAPT) {
-      alert(`Insufficient balance! You have ${currentBalanceAPT.toFixed(3)} APT but need ${betValue} APT`);
+    const currentBalanceMOVE = getCurrentBalanceInMOVE();
+    if (betValue > parseFloat(currentBalanceMOVE)) {
+      alert(`Insufficient balance! You have ${currentBalanceMOVE} MOVE but need ${betValue} MOVE`);
       return;
     }
     
@@ -130,8 +131,8 @@ export default function GameControls({ onBet, onRowChange, onRiskLevelChange, on
       balanceInAPT: (currentBalance / 100000000).toFixed(3)
     });
     
-    if (totalBetAmountInReduxUnit > currentBalance) {
-      alert(`Insufficient balance for ${totalBets} bets of ${betAmount} APT each. You need ${totalBetAmount.toFixed(3)} APT but have ${(currentBalance / 100000000).toFixed(3)} APT`);
+    if (totalBetAmount > currentBalance) {
+      alert(`Insufficient balance for ${totalBets} bets of ${betAmount} MOVE each. You need ${totalBetAmount.toFixed(3)} MOVE but have ${currentBalance.toFixed(3)} MOVE`);
       setIsAutoPlaying(false);
       return;
     }
@@ -229,8 +230,8 @@ export default function GameControls({ onBet, onRowChange, onRiskLevelChange, on
   const hasSufficientBalance = () => {
     const betValue = parseFloat(betAmount);
     const currentBalance = parseFloat(userBalance);
-    const betAmountInReduxUnit = betValue * 100000000;
-    return betAmountInReduxUnit <= currentBalance && betValue > 0;
+    // userBalance is already in MOVE format (not octas), so direct comparison
+    return currentBalance >= betValue && betValue > 0;
   };
 
   // Check if user has sufficient balance for auto betting
@@ -238,14 +239,14 @@ export default function GameControls({ onBet, onRowChange, onRiskLevelChange, on
     const betValue = parseFloat(betAmount);
     const totalBets = parseInt(numberOfBets) || 1;
     const totalBetAmount = totalBets * betValue;
-    const totalBetAmountInReduxUnit = totalBetAmount * 100000000;
     const currentBalance = parseFloat(userBalance);
-    return totalBetAmountInReduxUnit <= currentBalance && betValue > 0;
+    // userBalance is already in MOVE format (not octas), so direct comparison
+    return currentBalance >= totalBetAmount && betValue > 0;
   };
 
-  // Get current balance in APT for display
-  const getCurrentBalanceInAPT = () => {
-    return (parseFloat(userBalance) / 100000000).toFixed(3);
+  // Get current balance in MOVE for display
+  const getCurrentBalanceInMOVE = () => {
+    return parseFloat(userBalance).toFixed(3);
   };
 
   return (
@@ -282,7 +283,7 @@ export default function GameControls({ onBet, onRowChange, onRiskLevelChange, on
           Bet Amount
         </label>
         <div className="mb-2">
-          <span className="text-2xl font-bold text-white">{betAmount} APT</span>
+          <span className="text-2xl font-bold text-white">{betAmount} MOVE</span>
         </div>
         <div className="relative">
           <input
@@ -337,37 +338,37 @@ export default function GameControls({ onBet, onRowChange, onRiskLevelChange, on
             onClick={() => handleBetAmountChange(0.01)}
             className="bg-[#2A0025] border border-[#333947] rounded-lg py-2 text-xs text-white hover:bg-[#3A0035] transition-colors"
           >
-            0.01 APT
+            0.01 MOVE
           </button>
           <button
             onClick={() => handleBetAmountChange(0.05)}
             className="bg-[#2A0025] border border-[#333947] rounded-lg py-2 text-xs text-white hover:bg-[#3A0025] transition-colors"
           >
-            0.05 APT
+            0.05 MOVE
           </button>
           <button
             onClick={() => handleBetAmountChange(0.1)}
             className="bg-[#2A0025] border border-[#333947] rounded-lg py-2 text-xs text-white hover:bg-[#3A0035] transition-colors"
           >
-            0.1 APT
+            0.1 MOVE
           </button>
           <button
             onClick={() => handleBetAmountChange(0.25)}
             className="bg-[#2A0025] border border-[#333947] rounded-lg py-2 text-xs text-white hover:bg-[#3A0035] transition-colors"
           >
-            0.25 APT
+            0.25 MOVE
           </button>
           <button
             onClick={() => handleBetAmountChange(0.5)}
             className="bg-[#2A0025] border border-[#333947] rounded-lg py-2 text-xs text-white hover:bg-[#3A0035] transition-colors"
           >
-            0.5 APT
+            0.5 MOVE
           </button>
           <button
             onClick={() => handleBetAmountChange(1)}
             className="bg-[#2A0025] border border-[#333947] rounded-lg py-2 text-xs text-white hover:bg-[#3A0025] transition-colors"
           >
-            1.0 APT
+            1.0 MOVE
           </button>
         </div>
       </div>
@@ -471,7 +472,7 @@ export default function GameControls({ onBet, onRowChange, onRiskLevelChange, on
           {/* Current Balance Display */}
           <div className="text-center p-3 bg-[#2A0025] rounded-lg border border-[#333947]">
             <span className="text-sm text-gray-400">Current Balance:</span>
-            <div className="text-lg font-bold text-green-400">{getCurrentBalanceInAPT()} APT</div>
+            <div className="text-lg font-bold text-green-400">{getCurrentBalanceInMOVE()} MOVE</div>
           </div>
           
           {/* Bet Button */}
@@ -491,8 +492,8 @@ export default function GameControls({ onBet, onRowChange, onRiskLevelChange, on
           {((gameMode === "auto" && !hasSufficientBalanceForAutoBet()) || (!gameMode === "auto" && !hasSufficientBalance())) && parseFloat(betAmount) > 0 && (
             <div className="text-center text-red-400 text-sm">
               {gameMode === "auto" 
-                ? `Insufficient balance for ${numberOfBets} bets of ${betAmount} APT each` 
-                : `Insufficient balance for ${betAmount} APT bet`
+                ? `Insufficient balance for ${numberOfBets} bets of ${betAmount} MOVE each` 
+                : `Insufficient balance for ${betAmount} MOVE bet`
               }
             </div>
           )}

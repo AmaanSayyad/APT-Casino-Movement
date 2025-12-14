@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { Aptos, AptosConfig, Network, Ed25519PrivateKey, Account } from '@aptos-labs/ts-sdk';
 
 const config = new AptosConfig({ network: Network.TESTNET });
-const aptos = new Aptos(config);
+const movement = new Aptos(config);
 
 export async function POST(_request: NextRequest) {
   try {
@@ -17,14 +17,14 @@ export async function POST(_request: NextRequest) {
     // Check if House exists
     const moduleAddr = process.env.NEXT_PUBLIC_CASINO_MODULE_ADDRESS!;
     try {
-      const res = await aptos.getAccountResource({
+      const res = await movement.getAccountResource({
         accountAddress: moduleAddr,
         resourceType: `${moduleAddr}::user_balance::House`,
       });
       return NextResponse.json({ message: 'House already initialized', admin: (res as any).data?.admin });
     } catch {}
 
-    const tx = await aptos.transaction.build.simple({
+    const tx = await movement.transaction.build.simple({
       sender: admin.accountAddress,
       data: {
         function: `${moduleAddr}::user_balance::init`,
@@ -36,8 +36,8 @@ export async function POST(_request: NextRequest) {
       },
     });
 
-    const committed = await aptos.signAndSubmitTransaction({ signer: admin, transaction: tx });
-    await aptos.waitForTransaction({ transactionHash: committed.hash });
+    const committed = await movement.signAndSubmitTransaction({ signer: admin, transaction: tx });
+    await movement.waitForTransaction({ transactionHash: committed.hash });
 
     return NextResponse.json({ success: true, transactionHash: committed.hash });
   } catch (e: any) {

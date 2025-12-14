@@ -1,9 +1,10 @@
-const { Aptos, AptosConfig, Network, Ed25519PrivateKey, Account } = require('@aptos-labs/ts-sdk');
+const { Movement, AptosConfig, Network, Ed25519PrivateKey, Account } = require('@aptos-labs/ts-sdk');
 const { execSync } = require('child_process');
 const path = require('path');
 const dotenv = require('dotenv');
 
-dotenv.config();
+// Load .env from parent directory
+dotenv.config({ path: path.join(__dirname, '..', '.env') });
 
 // Movement Bardock Testnet Configuration
 const MOVEMENT_BARDOCK_CONFIG = {
@@ -23,13 +24,13 @@ async function deployToMovement() {
       throw new Error('TREASURY_PRIVATE_KEY environment variable is required');
     }
 
-    // Create Aptos client for Movement Bardock
+    // Create Movement client for Movement Bardock
     const config = new AptosConfig({ 
       network: MOVEMENT_BARDOCK_CONFIG.network,
       fullnode: MOVEMENT_BARDOCK_CONFIG.fullnode,
       faucet: MOVEMENT_BARDOCK_CONFIG.faucet
     });
-    const aptos = new Aptos(config);
+    const movement = new Aptos(config);
 
     // Create treasury account from private key
     const privateKey = new Ed25519PrivateKey(process.env.TREASURY_PRIVATE_KEY);
@@ -44,7 +45,7 @@ async function deployToMovement() {
 
     // Check treasury account balance
     try {
-      const resources = await aptos.getAccountResources({ accountAddress: treasuryAddress });
+      const resources = await movement.getAccountResources({ accountAddress: treasuryAddress });
       const coinResource = resources.find(r => r.type === '0x1::coin::CoinStore<0x1::aptos_coin::AptosCoin>');
       if (coinResource) {
         const balance = parseInt(coinResource.data.coin.value) / 100000000; // Convert from octas to MOVE
@@ -64,14 +65,14 @@ async function deployToMovement() {
     const moveContractsPath = path.join(__dirname, '..', 'move-contracts');
     
     try {
-      // Use movement CLI to compile (falls back to aptos CLI if movement not available)
+      // Use movement CLI to compile (falls back to movement CLI if movement not available)
       let compileCommand;
       try {
         execSync('movement --version', { stdio: 'ignore' });
         compileCommand = `cd ${moveContractsPath} && movement move compile --named-addresses movement_casino=${treasuryAddress}`;
       } catch {
-        console.log('   Movement CLI not found, using Aptos CLI...');
-        compileCommand = `cd ${moveContractsPath} && aptos move compile --named-addresses movement_casino=${treasuryAddress}`;
+        console.log('   Movement CLI not found, using Movement CLI...');
+        compileCommand = `cd ${moveContractsPath} && movement move compile --named-addresses movement_casino=${treasuryAddress}`;
       }
       
       const compileOutput = execSync(compileCommand, { encoding: 'utf8' });
@@ -86,17 +87,38 @@ async function deployToMovement() {
     
     try {
       let publishCommand;
-      try {
-        execSync('movement --version', { stdio: 'ignore' });
-        publishCommand = `cd ${moveContractsPath} && echo "Y" | movement move publish --named-addresses movement_casino=${treasuryAddress} --url ${MOVEMENT_BARDOCK_CONFIG.fullnode} --private-key ${process.env.TREASURY_PRIVATE_KEY}`;
-      } catch {
-        publishCommand = `cd ${moveContractsPath} && echo "Y" | aptos move publish --named-addresses movement_casino=${treasuryAddress} --url ${MOVEMENT_BARDOCK_CONFIG.fullnode} --private-key-file <(echo "${process.env.TREASURY_PRIVATE_KEY}")`;
-      }
+      // Windows compatible approach
+      const fs = require('fs');
+      const tempKeyFile = path.join(__dirname, 'temp_private_key.txt');
+      let publishOutput = '';
       
-      const publishOutput = execSync(publishCommand, { 
-        encoding: 'utf8',
-        shell: '/bin/bash' // Required for process substitution
-      });
+      try {
+        // Write private key to temporary file
+        fs.writeFileSync(tempKeyFile, process.env.TREASURY_PRIVATE_KEY);
+        
+        // Try movement CLI first, then movement CLI
+        let publishCommand;
+        try {
+          execSync('movement --version', { stdio: 'ignore' });
+          publishCommand = `movement move publish --named-addresses movement_casino=${treasuryAddress} --url ${MOVEMENT_BARDOCK_CONFIG.fullnode} --private-key-file ${tempKeyFile} --assume-yes`;
+        } catch {
+          publishCommand = `movement move publish --named-addresses movement_casino=${treasuryAddress} --url ${MOVEMENT_BARDOCK_CONFIG.fullnode} --private-key-file ${tempKeyFile} --assume-yes`;
+        }
+        
+        publishOutput = execSync(publishCommand, { 
+          encoding: 'utf8',
+          cwd: moveContractsPath
+        });
+        
+        // Clean up temporary file
+        fs.unlinkSync(tempKeyFile);
+      } catch (error) {
+        // Clean up temporary file on error
+        if (fs.existsSync(tempKeyFile)) {
+          fs.unlinkSync(tempKeyFile);
+        }
+        throw error;
+      }
       
       // Extract transaction hash from output
       const hashMatch = publishOutput.match(/Transaction submitted: .*\/txn\/([a-fA-F0-9]+)/);
@@ -113,11 +135,11 @@ async function deployToMovement() {
       throw error;
     }
 
-    // Step 3: Initialize the game logger contract
+    // Step 3: Initialize Game Logger contract
     console.log('🎮 Step 3: Initializing Game Logger contract...');
     
     try {
-      const transaction = await aptos.transaction.build.simple({
+      const transaction = await movement.transaction.build.simple({
         sender: treasuryAccount.accountAddress,
         data: {
           function: `${treasuryAddress}::game_logger::initialize`,
@@ -125,7 +147,7 @@ async function deployToMovement() {
         },
       });
 
-      const committedTxn = await aptos.signAndSubmitTransaction({
+      const committedTxn = await movement.signAndSubmitTransaction({
         signer: treasuryAccount,
         transaction,
       });
@@ -133,7 +155,7 @@ async function deployToMovement() {
       console.log(`   📋 Initialization Transaction Hash: ${committedTxn.hash}`);
 
       // Wait for transaction confirmation
-      const executedTransaction = await aptos.waitForTransaction({
+      const executedTransaction = await movement.waitForTransaction({
         transactionHash: committedTxn.hash,
       });
 
@@ -150,7 +172,7 @@ async function deployToMovement() {
     
     try {
       // Check if GameLog resource exists
-      const resources = await aptos.getAccountResources({ accountAddress: treasuryAddress });
+      const resources = await movement.getAccountResources({ accountAddress: treasuryAddress });
       const gameLogResource = resources.find(r => r.type.includes('game_logger::GameLog'));
       
       if (gameLogResource) {

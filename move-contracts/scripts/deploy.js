@@ -39,7 +39,7 @@ async function main() {
   const resolvedNetwork = networkMap[networkName] || NetworkToNetworkName.TESTNET;
 
   const config = new AptosConfig({ network: resolvedNetwork });
-  const aptos = new Aptos(config);
+  const movement = new Aptos(config);
 
   const privateKey = new Ed25519PrivateKey(privateKeyHex);
   const deployer = Account.fromPrivateKey({ privateKey });
@@ -60,12 +60,12 @@ async function main() {
     packageDir = resolved;
   }
 
-  const tx = await aptos.publishPackageTransaction({
+  const tx = await movement.publishPackageTransaction({
     account: deployer.accountAddress,
     packageDirectoryPath: packageDir,
   });
 
-  const committedTxn = await aptos.signAndSubmitTransaction({
+  const committedTxn = await movement.signAndSubmitTransaction({
     signer: deployer,
     transaction: tx,
   });

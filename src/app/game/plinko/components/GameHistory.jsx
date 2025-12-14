@@ -42,9 +42,6 @@ export default function GameHistory({ history }) {
                 Payout
               </th>
               <th className="text-left py-3 px-4 text-sm font-medium text-gray-400">
-                Entropy
-              </th>
-              <th className="text-left py-3 px-4 text-sm font-medium text-gray-400">
                 Movement
               </th>
             </tr>
@@ -77,21 +74,6 @@ export default function GameHistory({ history }) {
                     <div className="w-4 h-4 bg-yellow-500 rounded-full"></div>
                     <span className="text-white text-sm">{game.payout}</span>
                   </div>
-                </td>
-                <td className="py-3 px-4">
-                  {game.entropyProof ? (
-                    <a
-                      href={game.entropyProof}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-blue-400 hover:text-blue-300 text-xs underline"
-                      title="View Pyth Entropy Proof"
-                    >
-                      Entropy
-                    </a>
-                  ) : (
-                    <span className="text-gray-500 text-xs">N/A</span>
-                  )}
                 </td>
                 <td className="py-3 px-4">
                   <MovementTxLink

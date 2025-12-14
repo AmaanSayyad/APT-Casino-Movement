@@ -341,7 +341,6 @@ const RouletteHistory = ({ bettingHistory = [] }) => {
                       <TableCell align="center">Amount</TableCell>
                       <TableCell align="center">Result</TableCell>
                       <TableCell align="right">Payout</TableCell>
-                      <TableCell align="center">Entropy</TableCell>
                       <TableCell align="center">Movement</TableCell>
                     </TableRow>
                   </TableHead>
@@ -443,7 +442,7 @@ const RouletteHistory = ({ bettingHistory = [] }) => {
                             )}
                           </Box>
                         </TableCell>
-                        <TableCell align="center">{bet.amount || bet.totalBetAmount || 0} APT</TableCell>
+                        <TableCell align="center">{bet.amount || bet.totalBetAmount || 0} MOVE</TableCell>
                         <TableCell align="center">
                           <Box 
                             sx={{ 
@@ -479,25 +478,10 @@ const RouletteHistory = ({ bettingHistory = [] }) => {
                             {bet.win ? (
                               <>
                                 <FaCoins size={12} color="#14D854" />
-                                +{(bet.payout || bet.netResult || 0).toFixed(4)} APT
+                                +{(bet.payout || bet.netResult || 0).toFixed(4)} MOVE
                               </>
                             ) : '-'}
                           </Typography>
-                        </TableCell>
-                        <TableCell align="center">
-                          {bet.entropyProof ? (
-                            <a
-                              href={bet.entropyProof}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              style={{ color: '#60a5fa', textDecoration: 'underline', fontSize: '0.75rem' }}
-                              title="View Pyth Entropy Proof"
-                            >
-                              Entropy
-                            </a>
-                          ) : (
-                            <Typography variant="caption" color="rgba(255,255,255,0.5)">N/A</Typography>
-                          )}
                         </TableCell>
                         <TableCell align="center">
                           <MovementTxLink
@@ -622,7 +606,7 @@ const RouletteHistory = ({ bettingHistory = [] }) => {
                       </Box>
                       <Typography variant="body2" color="rgba(255,255,255,0.7)">Total Wagered</Typography>
                     </Box>
-                    <Typography variant="h4" fontWeight="bold" color="white" sx={{ textShadow: '0 2px 4px rgba(0,0,0,0.5)' }}>{stats.totalWagered} APT</Typography>
+                    <Typography variant="h4" fontWeight="bold" color="white" sx={{ textShadow: '0 2px 4px rgba(0,0,0,0.5)' }}>{stats.totalWagered} MOVE</Typography>
                   </Box>
                   
                   <Box 
@@ -664,7 +648,7 @@ const RouletteHistory = ({ bettingHistory = [] }) => {
                       color={stats.netProfit >= 0 ? '#14D854' : '#d82633'}
                       sx={{ textShadow: '0 2px 4px rgba(0,0,0,0.5)' }}
                     >
-                      {stats.netProfit >= 0 ? '+' : ''}{stats.netProfit} APT
+                      {stats.netProfit >= 0 ? '+' : ''}{stats.netProfit} MOVE
                     </Typography>
                   </Box>
                 </Box>
@@ -784,7 +768,7 @@ const RouletteHistory = ({ bettingHistory = [] }) => {
                             zIndex: 2 
                           }}
                         >
-                          {stats.biggestWin.payout} APT
+                          {stats.biggestWin.payout} MOVE
                         </Typography>
                         <Box 
                           sx={{ 

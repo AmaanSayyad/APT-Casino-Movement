@@ -5,6 +5,7 @@ import { Box, Typography, Paper, Table, TableBody, TableCell, TableContainer, Ta
 import { FaHistory, FaFilter, FaDownload, FaSearch, FaTrophy, FaChartLine, FaExternalLinkAlt, FaCheck } from "react-icons/fa";
 import Image from "next/image";
 import coin from "../../../../../public/coin.png";
+import MovementTxLink from "@/components/MovementTxLink";
 
 const WheelHistory = ({ gameHistory = [] }) => {
   const [activeTab, setActiveTab] = useState("all");
@@ -12,7 +13,7 @@ const WheelHistory = ({ gameHistory = [] }) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [page, setPage] = useState(1);
 
-   // Open Aptos explorer link for transaction hash
+   // Open Movement explorer link for transaction hash
    const openAptosExplorer = (hash) => {
     if (hash && hash !== 'unknown') {
       const explorerUrl = `https://explorer.aptoslabs.com/txn/${hash}?network=testnet`;
@@ -156,7 +157,7 @@ const WheelHistory = ({ gameHistory = [] }) => {
                 textOverflow: 'ellipsis',
                 whiteSpace: 'nowrap'
               }}>
-                {totalVolume.toFixed(5)} ETH
+                {totalVolume.toFixed(5)} MOVE
               </Typography>
               <Box 
                 sx={{ 
@@ -192,7 +193,7 @@ const WheelHistory = ({ gameHistory = [] }) => {
                 textOverflow: 'ellipsis',
                 whiteSpace: 'nowrap'
               }}>
-                {biggestWin.toFixed(5)} ETH
+                {biggestWin.toFixed(5)} MOVE
               </Typography>
               <FaTrophy color="#FFA500" />
             </Box>
@@ -455,7 +456,7 @@ const WheelHistory = ({ gameHistory = [] }) => {
                   borderBottom: '1px solid rgba(104, 29, 219, 0.2)'
                 }}
               >
-                TX
+                Movement
               </TableCell>
             </TableRow>
           </TableHead>
@@ -512,7 +513,7 @@ const WheelHistory = ({ gameHistory = [] }) => {
                           whiteSpace: 'nowrap'
                         }}
                       >
-                            {item.betAmount} ETH
+                            {item.betAmount} MOVE
                       </Typography>
                       <Image src={coin} width={16} height={16} alt="coin" />
                     </Box>
@@ -543,7 +544,7 @@ const WheelHistory = ({ gameHistory = [] }) => {
                           whiteSpace: 'nowrap'
                         }}
                       >
-                            {item.payout} ETH
+                            {item.payout} MOVE
                       </Typography>
                       <Image src={coin} width={16} height={16} alt="coin" />
                     </Box>
@@ -562,44 +563,10 @@ const WheelHistory = ({ gameHistory = [] }) => {
                       borderBottom: '1px solid rgba(104, 29, 219, 0.1)'
                     }}
                   >
-                    {item.txHash ? (
-                      <Box 
-                        sx={{ 
-                          display: 'flex', 
-                          alignItems: 'center', 
-                          gap: 0.5,
-                          cursor: 'pointer',
-                          '&:hover': {
-                            opacity: 0.8
-                          }
-                        }}
-                        onClick={() => openAptosExplorer(item.txHash)}
-                      >
-                        <Typography 
-                          variant="body2" 
-                          color="#4A9EFF"
-                          sx={{ 
-                            fontFamily: 'monospace',
-                            fontSize: '0.75rem',
-                            maxWidth: '80px',
-                            overflow: 'hidden',
-                            textOverflow: 'ellipsis',
-                            whiteSpace: 'nowrap'
-                          }}
-                        >
-                          {item.txHash.slice(0, 8)}...
-                        </Typography>
-                        <FaExternalLinkAlt size={10} color="#4A9EFF" />
-                      </Box>
-                    ) : (
-                      <Typography 
-                        variant="body2" 
-                        color="rgba(255,255,255,0.5)"
-                        sx={{ fontSize: '0.75rem' }}
-                      >
-                        Pending
-                      </Typography>
-                    )}
+                    <MovementTxLink
+                      transactionHash={item.movementTxHash}
+                      isPending={item.movementTxStatus === 'pending'}
+                    />
                   </TableCell>
                 </TableRow>
               </Fade>

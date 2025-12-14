@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { Aptos, AptosConfig, Network, Ed25519PrivateKey, Account } from '@aptos-labs/ts-sdk';
-import { TREASURY_ADDRESS as FRONT_TREASURY_ADDRESS } from '@/lib/aptos';
+import { TREASURY_ADDRESS as FRONT_TREASURY_ADDRESS } from '@/lib/movement';
 
 const config = new AptosConfig({ network: Network.TESTNET });
-const aptos = new Aptos(config);
+const movement = new Aptos(config);
 
 export async function POST(request: NextRequest) {
   try {
@@ -29,13 +29,13 @@ export async function POST(request: NextRequest) {
 
     console.log('💰 PROCESSING DEPOSIT:');
     console.log('├── User Address:', userAddress);
-    console.log('├── Amount:', depositAmount, 'APT');
+    console.log('├── Amount:', depositAmount, 'MOVE');
     console.log('├── Transaction Hash:', transactionHash);
     console.log('└── Processing...');
 
     // Verify the transaction exists and is successful
     try {
-      const transaction = await aptos.getTransactionByHash({
+      const transaction = await movement.getTransactionByHash({
         transactionHash: transactionHash,
       });
 
@@ -105,7 +105,7 @@ export async function POST(request: NextRequest) {
     // Ensure House resource exists and signer matches admin
     try {
       const moduleAddr = normalize(process.env.NEXT_PUBLIC_CASINO_MODULE_ADDRESS!);
-      const houseRes = await aptos.getAccountResource({
+      const houseRes = await movement.getAccountResource({
         accountAddress: moduleAddr,
         resourceType: `${process.env.NEXT_PUBLIC_CASINO_MODULE_ADDRESS}::user_balance::House`
       });
@@ -149,7 +149,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Convert amount to octas (APT uses 8 decimal places)
+    // Convert amount to octas (MOVE uses 8 decimal places)
     const amountOctas = Math.floor(depositAmount * 100000000);
 
     // Update user balance in contract
@@ -182,7 +182,7 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
-    const transaction = await aptos.transaction.build.simple({
+    const transaction = await movement.transaction.build.simple({
       sender: treasuryAccount.accountAddress,
       data: {
         function: `${process.env.NEXT_PUBLIC_CASINO_MODULE_ADDRESS}::user_balance::admin_deposit`,
@@ -199,7 +199,7 @@ export async function POST(request: NextRequest) {
 
     let committedTxn;
     try {
-      committedTxn = await aptos.signAndSubmitTransaction({
+      committedTxn = await movement.signAndSubmitTransaction({
         signer: treasuryAccount,
         transaction,
       });
@@ -212,13 +212,13 @@ export async function POST(request: NextRequest) {
     }
 
     // Wait for transaction confirmation
-    const executedTransaction = await aptos.waitForTransaction({
+    const executedTransaction = await movement.waitForTransaction({
       transactionHash: committedTxn.hash,
     });
 
     console.log('✅ DEPOSIT PROCESSED:');
     console.log('├── User:', userAddress);
-    console.log('├── Amount:', depositAmount, 'APT');
+    console.log('├── Amount:', depositAmount, 'MOVE');
     console.log('├── Balance Update TX:', committedTxn.hash);
     console.log('├── Gas Used:', executedTransaction.gas_used);
     console.log('└── Success!');

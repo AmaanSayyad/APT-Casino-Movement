@@ -156,10 +156,10 @@ const LendingTable = ({ assets = [], isLoading = false }) => {
       return;
     }
     
-    // Load connection state for Aptos
+    // Load connection state for Movement
     const loadConnectionState = async () => {
       try {
-        // Set connected state for Aptos testnet
+        // Set connected state for Movement testnet
         setIsConnected(true);
         
         // Try to load user deposits
@@ -182,9 +182,9 @@ const LendingTable = ({ assets = [], isLoading = false }) => {
   
   const handleDeposit = async (asset, amount) => {
     if (!isConnected) {
-      // Show Aptos wallet connection message
+      // Show Movement wallet connection message
       if (!isDev) {
-        alert("Please connect your Aptos wallet to continue");
+        alert("Please connect your Movement wallet to continue");
       }
       return;
     }
@@ -225,9 +225,9 @@ const LendingTable = ({ assets = [], isLoading = false }) => {
   
   const handleWithdraw = async (asset, amount) => {
     if (!isConnected) {
-      // Show Aptos wallet connection message
+      // Show Movement wallet connection message
       if (!isDev) {
-        alert("Please connect your Aptos wallet to continue");
+        alert("Please connect your Movement wallet to continue");
       }
       return;
     }
@@ -320,10 +320,10 @@ const LendingTable = ({ assets = [], isLoading = false }) => {
             <p className="text-center text-white/70 mb-2">Connect your wallet to see your deposits and start earning</p>
             <div className="flex justify-center">
               <GradientBgButton onClick={() => {
-                // Show Aptos wallet connection message
-                alert("Please connect your Aptos wallet to continue");
+                // Show Movement wallet connection message
+                alert("Please connect your Movement wallet to continue");
               }}>
-                Connect Aptos Wallet
+                Connect Movement Wallet
               </GradientBgButton>
             </div>
           </div>

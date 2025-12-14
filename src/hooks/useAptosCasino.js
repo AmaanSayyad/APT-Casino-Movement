@@ -7,7 +7,7 @@ import {
   formatAptAmount, 
   parseAptAmount,
   CasinoGames 
-} from '@/lib/aptos';
+} from '@/lib/movement';
 
 export const useAptosCasino = () => {
   const { wallet, connected, account } = useWallet();

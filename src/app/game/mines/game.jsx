@@ -9,7 +9,7 @@ import useWindowSize from 'react-use/lib/useWindowSize';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { useDispatch, useSelector } from 'react-redux';
-import { setBalance } from '@/store/balanceSlice';
+import { setBalance, subtractFromBalance, addToBalance } from '@/store/balanceSlice';
 
 const GRID_SIZES = {
   5: 5, // 5x5 grid - classic mode
@@ -42,7 +42,7 @@ const Game = ({ betSettings = {}, onGameStatusChange, onGameComplete }) => {
 
   // Game Settings
   const defaultSettings = {
-    betAmount: 1, // Default to 1 APT
+    betAmount: 1, // Default to 1 MOVE
     mines: 5,
     isAutoBetting: false,
     tilesToReveal: 5,
@@ -305,37 +305,35 @@ const Game = ({ betSettings = {}, onGameStatusChange, onGameComplete }) => {
       // Place bet using Redux balance
       const startGameWithBet = async () => {
         // Check if wallet is connected first
-        if (!window.aptos || !window.aptos.account) {
-          toast.error('Please connect your Aptos wallet first');
+        if (!window.movement || !window.movement.account) {
+          toast.error('Please connect your Movement wallet first');
           return;
         }
         
-        // Check Redux balance
-        const currentBalance = parseFloat(userBalance || '0') / 100000000; // Convert from octas to APT
+        // Check Redux user balance (house balance)
+        const currentBalance = parseFloat(userBalance || '0'); // User balance is already in MOVE format
         
         if (currentBalance < settings.betAmount) {
-          toast.error(`Insufficient balance. You have ${currentBalance.toFixed(8)} APT but need ${settings.betAmount} APT`);
+          toast.error(`Insufficient house balance. You have ${currentBalance.toFixed(8)} MOVE but need ${settings.betAmount} MOVE`);
           return;
         }
 
         try {
           // Deduct bet amount from Redux balance
-          const betAmountInOctas = settings.betAmount * 100000000; // Convert to octas
-          const newBalance = (parseFloat(userBalance || '0') - betAmountInOctas).toString();
-          dispatch(setBalance(newBalance));
+          dispatch(subtractFromBalance(settings.betAmount));
           
           console.log('=== STARTING MINES BET WITH REDUX BALANCE ===');
-          console.log('Bet amount (APT):', settings.betAmount);
-          console.log('Current balance (APT):', currentBalance);
+          console.log('Bet amount (MOVE):', settings.betAmount);
+          console.log('Current balance (MOVE):', currentBalance);
           console.log('Mines count:', settings.mines);
-          console.log('Balance deducted. New balance:', (parseFloat(newBalance) / 100000000).toFixed(8), 'APT');
+          console.log('Balance deducted. New balance:', (currentBalance - settings.betAmount).toFixed(4), 'MOVE');
           
           // Start the game immediately
           setIsPlaying(true);
           setHasPlacedBet(true);
           playSound('bet');
           
-          toast.success(`Bet placed! ${settings.betAmount} APT deducted from balance`);
+          toast.success(`Bet placed! ${settings.betAmount} MOVE deducted from balance`);
           toast.info(`Game starting...`);
           
           // Special message if AI-assisted auto betting
@@ -345,7 +343,7 @@ const Game = ({ betSettings = {}, onGameStatusChange, onGameComplete }) => {
           } else if (settings.isAutoBetting) {
             toast.info(`Auto betting mode: Will reveal ${settings.tilesToReveal || 5} tiles`);
           } else {
-            toast.info(`Bet placed: ${settings.betAmount} APT, ${settings.mines} mines`);
+            toast.info(`Bet placed: ${settings.betAmount} MOVE, ${settings.mines} mines`);
           }
           
           // If auto-betting is enabled, automatically reveal tiles with minimal delay
@@ -646,21 +644,20 @@ const Game = ({ betSettings = {}, onGameStatusChange, onGameComplete }) => {
       
       // Cashout is just a local operation - no blockchain transaction needed
       // The actual payout was already handled in the initial bet transaction
-      toast.success(`Cashed out: ${payout.toFixed(4)} APT (${multiplier.toFixed(2)}x)`);
+      toast.success(`Cashed out: ${payout.toFixed(4)} MOVE (${multiplier.toFixed(2)}x)`);
       playSound('cashout');
       
       // Update user balance in Redux store (add payout to current balance)
-      const currentBalanceOctas = parseInt(userBalance || '0');
-      const payoutOctas = Math.floor(payout * 100000000);
-      const newBalanceOctas = currentBalanceOctas + payoutOctas;
+      const currentBalance = parseFloat(userBalance || '0'); // userBalance is already in MOVE format
+      const newBalance = currentBalance + payout;
       
       console.log('Balance update:', {
-        currentBalance: (currentBalanceOctas / 100000000).toFixed(8),
+        currentBalance: currentBalance.toFixed(8),
         payout: payout.toFixed(4),
-        newBalance: (newBalanceOctas / 100000000).toFixed(8)
+        newBalance: newBalance.toFixed(8)
       });
       
-      dispatch(setBalance(newBalanceOctas.toString()));
+      dispatch(setBalance(newBalance.toString()));
       
       // Show brief confetti for wins
       if (multiplier > 1.5) {
@@ -971,7 +968,7 @@ const Game = ({ betSettings = {}, onGameStatusChange, onGameComplete }) => {
               } rounded-lg text-white font-bold shadow-lg transition-all flex items-center justify-center gap-2`}
             >
               <FaCoins className="text-yellow-300" />
-              <span>CASH OUT ({calculatePayout()} APT)</span>
+              <span>CASH OUT ({calculatePayout()} MOVE)</span>
             </button>
           </div>
         )}
@@ -981,7 +978,7 @@ const Game = ({ betSettings = {}, onGameStatusChange, onGameComplete }) => {
           <div className="text-center py-3 bg-gradient-to-r from-green-600 to-emerald-600 rounded-lg text-white font-bold">
             <span>🎉 CONGRATULATIONS! YOU WON! 🎉</span>
             <div className="mt-2 text-sm opacity-90">
-              Winnings: {calculatePayout()} APT ({multiplier.toFixed(2)}x)
+              Winnings: {calculatePayout()} MOVE ({multiplier.toFixed(2)}x)
             </div>
           </div>
         )}

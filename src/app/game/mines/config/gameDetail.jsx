@@ -61,17 +61,17 @@ export const bettingTableData = {
 
 export const gameStatistics = {
   totalBets: '956,421',
-      totalVolume: '4.7M APTC',
-    avgBetSize: '1.85 APTC',
-    maxWin: '1,217.50 APTC'
+      totalVolume: '4.7M MOVE',
+    avgBetSize: '1.85 MOVE',
+    maxWin: '1,217.50 MOVE'
 };
 
 export const recentBigWins = [
-      { player: "CryptoMiner", amount: "1,217.50 APTC", time: "3m ago", config: "10 mines" },
-    { player: "DiamondHands", amount: "892.50 APTC", time: "10m ago", config: "5 mines" },
-    { player: "GemHunter", amount: "653.00 APTC", time: "22m ago", config: "3 mines" },
-    { player: "RiskTaker", amount: "437.00 APTC", time: "45m ago", config: "3 mines" },
-    { player: "TreasureSeeker", amount: "381.50 APTC", time: "1h ago", config: "1 mine" }
+      { player: "CryptoMiner", amount: "1,217.50 MOVE", time: "3m ago", config: "10 mines" },
+    { player: "DiamondHands", amount: "892.50 MOVE", time: "10m ago", config: "5 mines" },
+    { player: "GemHunter", amount: "653.00 MOVE", time: "22m ago", config: "3 mines" },
+    { player: "RiskTaker", amount: "437.00 MOVE", time: "45m ago", config: "3 mines" },
+    { player: "TreasureSeeker", amount: "381.50 MOVE", time: "1h ago", config: "1 mine" }
 ];
 
 export const winProbabilities = [

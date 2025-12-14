@@ -29,8 +29,8 @@ const HowItWorksSection = () => {
     },
     {
       id: 2,
-      title: 'Get APTC Tokens',
-      description: 'Power your gameplay with APT tokens built on Aptos Network. Easily swap from any token or other cryptocurrencies.',
+      title: 'Get MOVE Tokens',
+      description: 'Power your gameplay with MOVE tokens built on Movement Network. Easily swap from any token or other cryptocurrencies.',
       emoji: '💰'
     },
     {
@@ -42,7 +42,7 @@ const HowItWorksSection = () => {
     {
       id: 4,
       title: 'Earn Rewards',
-      description: 'Win APT tokens and unlock exclusive perks through our multi-tiered loyalty program. Earn cashback on losses and gain access to tournaments.',
+      description: 'Win MOVE tokens and unlock exclusive perks through our multi-tiered loyalty program. Earn cashback on losses and gain access to tournaments.',
       emoji: '🏆'
     },
   ];
@@ -112,7 +112,7 @@ const HowItWorksSection = () => {
                   <AptosConnectWalletButton />
                 ) : (
                   <GradientBorderButton className="transform hover:scale-105 transition-transform">
-                    {activeStep === 2 ? 'Get APTC Tokens' : 
+                    {activeStep === 2 ? 'Get MOVE Tokens' : 
                      activeStep === 3 ? 'Browse Games' : 'View Rewards'}
                   </GradientBorderButton>
                 )}

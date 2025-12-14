@@ -46,7 +46,7 @@ const StatsOverview = () => {
                 </span>
               )}
             </div>
-            <p className="text-xs uppercase mt-1 text-white/70">Total APTC Pool</p>
+            <p className="text-xs uppercase mt-1 text-white/70">Total MOVE Pool</p>
           </div>
           
           <div className="flex flex-col items-center">
@@ -59,7 +59,7 @@ const StatsOverview = () => {
                 </span>
               )}
             </div>
-            <p className="text-xs uppercase mt-1 text-white/70">APTC APY</p>
+            <p className="text-xs uppercase mt-1 text-white/70">MOVE APY</p>
           </div>
           
           <div className="flex flex-col items-center">
@@ -72,7 +72,7 @@ const StatsOverview = () => {
                 </span>
               )}
             </div>
-            <p className="text-xs uppercase mt-1 text-white/70">APTC Price</p>
+            <p className="text-xs uppercase mt-1 text-white/70">MOVE Price</p>
           </div>
           
           <div className="flex flex-col items-center">

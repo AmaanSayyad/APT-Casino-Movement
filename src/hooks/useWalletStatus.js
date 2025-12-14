@@ -38,7 +38,7 @@ export function WalletStatusProvider({ children }) {
       setDevWallet({
         isConnected: true,
         address: '0x1234...dev',
-        chain: { id: 'aptos_testnet', name: 'Aptos Testnet' },
+        chain: { id: 'aptos_testnet', name: 'Movement Testnet' },
       });
     }
 
@@ -54,7 +54,7 @@ export function WalletStatusProvider({ children }) {
           ? {
               isConnected: true,
               address: '0x1234...dev',
-              chain: { id: 'aptos_testnet', name: 'Aptos Testnet' },
+              chain: { id: 'aptos_testnet', name: 'Movement Testnet' },
             }
           : {
               isConnected: false,
@@ -76,7 +76,7 @@ export function WalletStatusProvider({ children }) {
       setDevWallet({
         isConnected: true,
         address: '0x1234...dev',
-        chain: { id: 'aptos_testnet', name: 'Aptos Testnet' },
+        chain: { id: 'aptos_testnet', name: 'Movement Testnet' },
       });
       return;
     }
@@ -84,7 +84,7 @@ export function WalletStatusProvider({ children }) {
     try {
       await connect();
     } catch (err) {
-      setError('Failed to connect to Aptos wallet: ' + err.message);
+      setError('Failed to connect to Movement wallet: ' + err.message);
     }
   }, [connect, isDev]);
 
@@ -117,12 +117,12 @@ export function WalletStatusProvider({ children }) {
         address: account?.address,
         chain: { 
           id: 'aptos_testnet', 
-          name: 'Aptos Testnet' 
+          name: 'Movement Testnet' 
         },
       };
 
   useEffect(() => {
-    console.log('🔌 Aptos Wallet connection changed:');
+    console.log('🔌 Movement Wallet connection changed:');
     console.log('Connected:', currentStatus.isConnected);
     console.log('Address:', currentStatus.address);
     console.log('Chain:', currentStatus.chain);

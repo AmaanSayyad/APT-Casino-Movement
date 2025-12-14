@@ -21,7 +21,6 @@ import { gameData, bettingTableData } from "./config/gameDetail";
 import { useToken } from "@/hooks/useToken";
 
 import useWalletStatus from '@/hooks/useWalletStatus';
-import { useGameLogger } from '@/hooks/useGameLogger';
 import { useMovementGameLogger } from '@/hooks/useMovementGameLogger';
 import { useWallet } from '@aptos-labs/wallet-adapter-react';
 
@@ -35,10 +34,10 @@ import WinProbabilities from './components/WinProbabilities';
 import RouletteHistory from './components/RouletteHistory';
 import { useSelector, useDispatch } from 'react-redux';
 import { setBalance, setLoading, loadBalanceFromStorage } from '@/store/balanceSlice';
-import { aptosClient, CASINO_MODULE_ADDRESS, parseAptAmount, CasinoGames } from '@/lib/aptos';
+import { aptosClient, CASINO_MODULE_ADDRESS, parseAptAmount, CasinoGames } from '@/lib/movement';
 
 
-// Aptos wallet integration will be added here
+// Movement wallet integration will be added here
 
 const TooltipWide = styled(({ className, ...props }) => (
   <Tooltip {...props} classes={{ popper: className }} />
@@ -987,8 +986,8 @@ export default function GameRoulette() {
     // Sample statistics
     const gameStatistics = {
       totalBets: '1,856,342',
-      totalVolume: '8.3M APTC',
-      maxWin: '243,500 APTC'
+      totalVolume: '8.3M MOVE',
+      maxWin: '243,500 MOVE'
     };
 
     return (
@@ -1163,18 +1162,17 @@ export default function GameRoulette() {
   const [bettingHistory, setBettingHistory] = useState([]);
   const [error, setError] = useState(null);
 
-  // Aptos wallet
+  // Movement wallet
   const { account, connected, signAndSubmitTransaction, wallet } = useWallet();
   const address = account?.address;
   const isConnected = !!connected;
   const isWalletReady = isConnected && account && signAndSubmitTransaction && wallet;
   const [realBalance, setRealBalance] = useState('0');
   const { balance } = useToken(address); // Keep for compatibility
-  const { logGame } = useGameLogger();
   const { logGame: logMovementGame } = useMovementGameLogger();
   const HOUSE_ADDR = CASINO_MODULE_ADDRESS;
 
-  // Function to fetch real APT balance
+  // Function to fetch real MOVE balance
   const fetchRealBalance = useCallback(async () => {
     if (!account?.address) return;
 
@@ -1559,12 +1557,12 @@ export default function GameRoulette() {
       return;
     }
 
-    // Check Redux balance instead of wallet
-    const currentBalance = parseFloat(userBalance || '0') / 100000000; // Convert from octas to APT
+    // Check Redux user balance (house balance)
+    const currentBalance = parseFloat(userBalance || '0'); // User balance is already in MOVE format
     const totalBetAmount = total;
 
     if (currentBalance < totalBetAmount) {
-      alert(`Insufficient balance. You have ${currentBalance.toFixed(8)} APT but need ${totalBetAmount} APT`);
+      alert(`Insufficient house balance. You have ${currentBalance.toFixed(8)} MOVE but need ${totalBetAmount} MOVE`);
       return;
     }
 
@@ -1581,26 +1579,25 @@ export default function GameRoulette() {
         remainingBalance: currentBalance - totalBetAmount
       });
 
-      // Store original balance for calculation
+      // Store original balance for calculation (already in MOVE format)
       const originalBalance = parseFloat(userBalance || '0');
       
-      // Check if user has enough balance
-      if (originalBalance < totalBetAmount * 100000000) {
-        alert(`Insufficient balance. You have ${(originalBalance / 100000000).toFixed(8)} APT but need ${totalBetAmount} APT`);
+      // Check if user has enough house balance
+      if (originalBalance < totalBetAmount) {
+        alert(`Insufficient house balance. You have ${originalBalance.toFixed(8)} MOVE but need ${totalBetAmount} MOVE`);
         setSubmitDisabled(false);
         setWheelSpinning(false);
         return;
       }
       
-      // Deduct bet amount immediately from balance
-      const betAmountInOctas = totalBetAmount * 100000000;
-      const balanceAfterBet = originalBalance - betAmountInOctas;
+      // Deduct bet amount immediately from balance (both in MOVE format)
+      const balanceAfterBet = originalBalance - totalBetAmount;
       dispatch(setBalance(balanceAfterBet.toString()));
       
       console.log("Balance deducted:", {
-        originalBalance: originalBalance / 100000000,
+        originalBalance: originalBalance,
         betAmount: totalBetAmount,
-        balanceAfterBet: balanceAfterBet / 100000000
+        balanceAfterBet: balanceAfterBet
       });
 
       // Convert ALL bets into an array for multiple bet processing
@@ -1934,15 +1931,15 @@ export default function GameRoulette() {
         // Update user balance with final result
         // netResult = totalPayout (includes original bet since we already deducted it)
         // So we just add the total winnings to the balance after bet deduction
-        const finalBalance = balanceAfterBet + (netResult * 100000000);
+        const finalBalance = balanceAfterBet + netResult;
         dispatch(setBalance(finalBalance.toString()));
 
         console.log("Balance update:", {
-          originalBalance: originalBalance / 100000000,
-          balanceAfterBet: balanceAfterBet / 100000000,
+          originalBalance: originalBalance,
+          balanceAfterBet: balanceAfterBet,
           totalPayout: totalPayout,
           netResult: netResult,
-          finalBalance: finalBalance / 100000000,
+          finalBalance: finalBalance,
           explanation: "netResult = totalPayout (includes original bet), so we add full winnings"
         });
 
@@ -1955,12 +1952,11 @@ export default function GameRoulette() {
           numbers: [],
           result: winningNumber,
           win: netResult > 0,  // Use netResult to determine if it's a win
-          payout: netResult > 0 ? (netResult - totalBetAmount) : -totalBetAmount,   // Net winnings (exclude original bet)
+          payout: netResult > 0 ? (netResult - totalBetAmount) : -totalBetAmount,   // Net profit/loss (MOVE format)
           multiplier: netResult > 0 ? (netResult / totalBetAmount).toFixed(2) : 0,
           totalBets: allBets.length, // Add totalBets field
           winningBets: winningBets.length, // Add winningBets field
           txHash: null,
-          entropyProof: null, // Will be populated when Pyth entropy is integrated
           movementTxHash: null,
           movementTxStatus: 'none',
           details: {
@@ -1974,39 +1970,17 @@ export default function GameRoulette() {
           payout: newBet.payout,
           netResult,
           totalPayout,
-          totalBetAmount
+          totalBetAmount,
+          payoutCalculation: `${netResult} > 0 ? (${netResult} - ${totalBetAmount}) : -${totalBetAmount} = ${newBet.payout}`
         });
 
         setBettingHistory(prev => [newBet, ...prev].slice(0, 50)); // Keep last 50 bets
 
-        // Log game to blockchain (existing system)
-        if (account?.address && totalBetAmount > 0) {
-          const gameResult = `number${winningNumber}_${netResult > 0 ? 'win' : 'loss'}_${winningBets.length}bets`;
-          logGame({
-            gameType: 'roulette',
-            playerAddress: account.address,
-            betAmount: totalBetAmount,
-            result: gameResult,
-            payout: netResult > 0 ? (netResult - totalBetAmount) : 0,
-          }).then(res => {
-            if (res?.success) {
-              setBettingHistory(prev => {
-                if (prev.length === 0) return prev;
-                const [first, ...rest] = prev;
-                const updatedFirst = { ...first, txHash: res.transactionHash || null };
-                return [updatedFirst, ...rest];
-              });
-            }
-          }).catch(error => {
-            console.error('Failed to log roulette game:', error);
-          });
-        }
-        
         // Log game to Movement blockchain
         if (account?.address && totalBetAmount > 0) {
           console.log('🎯 Logging Roulette game to Movement blockchain...');
           
-          // Generate random seed for entropy (timestamp + random for uniqueness)
+          // Generate random seed (timestamp + random for uniqueness)
           const randomSeed = BigInt(Date.now() * 1000 + Math.floor(Math.random() * 1000));
           
           // Update history to show pending status
@@ -2082,16 +2056,16 @@ export default function GameRoulette() {
         // Show result notification
         if (netResult > 0) {
           const winMessage = winningBets.length === 1
-            ? `🎉 WINNER! ${winningBets[0].name} - You won ${(netResult - totalBetAmount).toFixed(4)} APT!`
-            : `🎉 MULTIPLE WINNERS! ${winningBets.length} bets won - Total: ${(netResult - totalBetAmount).toFixed(4)} APT!`;
+            ? `🎉 WINNER! ${winningBets[0].name} - You won ${(netResult - totalBetAmount).toFixed(4)} MOVE!`
+            : `🎉 MULTIPLE WINNERS! ${winningBets.length} bets won - Total: ${(netResult - totalBetAmount).toFixed(4)} MOVE!`;
 
           setNotificationMessage(winMessage);
           setNotificationSeverity("success");
           setSnackbarMessage(winMessage);
         } else {
-          setNotificationMessage(`💸 Number ${winningNumber} - You lost ${totalBetAmount.toFixed(4)} APT!`);
+          setNotificationMessage(`💸 Number ${winningNumber} - You lost ${totalBetAmount.toFixed(4)} MOVE!`);
           setNotificationSeverity("error");
-          setSnackbarMessage(`💸 Number ${winningNumber} - You lost ${totalBetAmount.toFixed(4)} APT!`);
+          setSnackbarMessage(`💸 Number ${winningNumber} - You lost ${totalBetAmount.toFixed(4)} MOVE!`);
         }
         setSnackbarOpen(true);
 
@@ -3056,7 +3030,7 @@ export default function GameRoulette() {
               />
 
               <Typography color="white" sx={{ opacity: 0.8 }}>
-                Current Bet Total: {currency(total, { pattern: "#" }).format()} APT
+                Current Bet Total: {currency(total, { pattern: "#" }).format()} MOVE
               </Typography>
 
               {/* Quick Bet Buttons */}
@@ -3131,7 +3105,7 @@ export default function GameRoulette() {
                       loading={submitDisabled}
                       onClick={lockBet}
                     >
-                      {total > 0 ? `Place Bet (${total.toFixed(2)} APT)` : 'Place Bet (APT)'}
+                      {total > 0 ? `Place Bet (${total.toFixed(2)} MOVE)` : 'Place Bet (MOVE)'}
                     </Button>
                     {submitDisabled && rollResult < 0 && (
                       <Typography color="white" sx={{ opacity: 0.8 }}>
@@ -3374,7 +3348,7 @@ export default function GameRoulette() {
                     textShadow: '0 1px 2px rgba(0,0,0,0.3)',
                   }}
                 >
-                  European Roulette with a single zero and just 2.7% house edge - better odds than traditional casinos. Provably fair and powered by Aptos on-chain randomness module blockchain technology.
+                  European Roulette with a single zero and just 2.7% house edge - better odds than traditional casinos. Provably fair and powered by Movement on-chain randomness module blockchain technology.
                 </Typography>
 
                 <Typography
@@ -3473,9 +3447,9 @@ export default function GameRoulette() {
             {notificationIndex === notificationSteps.RESULT_READY && (
               <Typography>
                 {winnings > 0
-                  ? `🎉 You won ${winnings.toFixed(4)} APT!`
+                  ? `🎉 You won ${winnings.toFixed(4)} MOVE!`
                   : winnings < 0
-                  ? `💸 You lost ${Math.abs(winnings).toFixed(4)} APT!`
+                  ? `💸 You lost ${Math.abs(winnings).toFixed(4)} MOVE!`
                   : "🤝 Break even!"}
               </Typography>
             )}

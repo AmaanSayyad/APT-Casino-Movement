@@ -14,7 +14,6 @@ import { HiOutlineTrendingUp, HiOutlineChartBar } from "react-icons/hi";
 import { useSelector, useDispatch } from 'react-redux';
 import { setBalance, setLoading, loadBalanceFromStorage } from '@/store/balanceSlice';
 import { useNotification } from '@/components/NotificationSystem';
-import { useGameLogger } from '@/hooks/useGameLogger';
 import { useMovementGameLogger } from '@/hooks/useMovementGameLogger';
 import { useWallet } from '@aptos-labs/wallet-adapter-react';
 
@@ -48,7 +47,6 @@ export default function Home() {
   const dispatch = useDispatch();
   const { userBalance, isLoading: isLoadingBalance } = useSelector((state) => state.balance);
   const notification = useNotification();
-  const { logGame } = useGameLogger();
   const { logGame: logMovementGame } = useMovementGameLogger();
   const { account } = useWallet();
   
@@ -85,17 +83,17 @@ export default function Home() {
     if (betAmount <= 0 || isSpinning) return;
 
      // Check if wallet is connected first
-     if (!window.aptos || !window.aptos.account) {
-      alert('Please connect your Aptos wallet first');
+     if (!window.movement || !window.movement.account) {
+      alert('Please connect your Movement wallet first');
       return;
     }
 
    
-    const currentBalance = parseFloat(userBalance || '0') / 100000000; // Convert from octas to APT
+    const currentBalance = parseFloat(userBalance || '0'); // User balance is already in MOVE format
 
     
     if (currentBalance < betAmount) {
-      alert(`Insufficient balance. You have ${currentBalance.toFixed(8)} APT but need ${betAmount} APT`);
+      alert(`Insufficient house balance. You have ${currentBalance.toFixed(8)} MOVE but need ${betAmount} MOVE`);
       return;
     }
 
@@ -104,16 +102,15 @@ export default function Home() {
       setHasSpun(false);
 
       console.log('=== STARTING WHEEL BET WITH REDUX BALANCE ===');
-      console.log('Bet amount (APT):', betAmount);
-      console.log('Current balance (APT):', currentBalance);
+      console.log('Bet amount (MOVE):', betAmount);
+      console.log('Current balance (MOVE):', currentBalance);
       console.log('Sectors:', noOfSegments);
       
       // Deduct bet amount from Redux balance
-      const betAmountInOctas = betAmount * 100000000; // Convert to octas
-      const newBalance = (parseFloat(userBalance || '0') - betAmountInOctas).toString();
+      const newBalance = (parseFloat(userBalance || '0') - betAmount).toFixed(4);
       dispatch(setBalance(newBalance));
       
-      console.log('Balance deducted. New balance:', (parseFloat(newBalance) / 100000000).toFixed(8), 'APT');
+      console.log('Balance deducted. New balance:', (parseFloat(newBalance) / 100000000).toFixed(8), 'MOVE');
       
       // Set up callback to handle wheel animation completion
       window.wheelBetCallback = (landedMultiplier) => {
@@ -145,7 +142,7 @@ export default function Home() {
           
           const winAmount = betAmount * actualMultiplier;
           
-          // Generate random seed for entropy (timestamp + random for uniqueness)
+          // Generate random seed (timestamp + random for uniqueness)
           const randomSeed = BigInt(Date.now() * 1000 + Math.floor(Math.random() * 1000));
           
           // Add to game history
@@ -159,35 +156,11 @@ export default function Home() {
             result: 0,
             color: detectedColor,
             txHash: null,
-            entropyProof: null, // Will be populated when Pyth entropy is integrated
             movementTxHash: null,
             movementTxStatus: 'none'
           };
 
           setGameHistory(prev => [newHistoryItem, ...prev]);
-          
-          // Log game to blockchain (existing system)
-          if (account?.address) {
-            const gameResult = `${risk}_${noOfSegments}segments_${actualMultiplier.toFixed(2)}x_${detectedColor}`;
-            logGame({
-              gameType: 'wheel',
-              playerAddress: account.address,
-              betAmount: betAmount,
-              result: gameResult,
-              payout: winAmount,
-            }).then(res => {
-              if (res?.success) {
-                setGameHistory(prev => {
-                  if (prev.length === 0) return prev;
-                  const [first, ...rest] = prev;
-                  const updatedFirst = { ...first, txHash: res.transactionHash || null };
-                  return [updatedFirst, ...rest];
-                });
-              }
-            }).catch(error => {
-              console.error('Failed to log wheel game:', error);
-            });
-          }
           
           // Log game to Movement blockchain
           if (account?.address) {
@@ -264,20 +237,19 @@ export default function Home() {
           
           // Show result and update balance
           if (actualMultiplier > 0) {
-            notification.success(`Congratulations! ${betAmount} APT × ${actualMultiplier.toFixed(2)} = ${winAmount.toFixed(8)} APT won!`);
+            notification.success(`Congratulations! ${betAmount} MOVE × ${actualMultiplier.toFixed(2)} = ${winAmount.toFixed(8)} MOVE won!`);
             
             // Update balance with winnings
-            const currentBalanceOctas = parseFloat(userBalance || '0');
-            const winAmountOctas = Math.floor(winAmount * 100000000);
-            const newBalanceWithWin = currentBalanceOctas + winAmountOctas;
+            const currentBalance = parseFloat(userBalance || '0');
+            const newBalanceWithWin = currentBalance + winAmount;
             
             console.log('💰 Adding winnings:', {
-              currentBalance: (currentBalanceOctas / 100000000).toFixed(8),
+              currentBalance: currentBalance.toFixed(8),
               winAmount: winAmount.toFixed(8),
-              newBalance: (newBalanceWithWin / 100000000).toFixed(8)
+              newBalance: newBalanceWithWin.toFixed(8)
             });
             
-            dispatch(setBalance(newBalanceWithWin.toString()));
+            dispatch(setBalance(newBalanceWithWin.toFixed(4)));
           } else {
             notification.info(`Game over. Multiplier: ${actualMultiplier.toFixed(2)}x`);
           }
@@ -308,8 +280,8 @@ export default function Home() {
     noOfSegments,
   }) => {
     // Check if wallet is connected first
-    if (!window.aptos || !window.aptos.account) {
-      alert('Please connect your Aptos wallet first');
+    if (!window.movement || !window.movement.account) {
+      alert('Please connect your Movement wallet first');
       return;
     }
     
@@ -322,11 +294,11 @@ export default function Home() {
 
     for (let i = 0; i < numberOfBets; i++) {
       // Check Redux balance before each bet
-      const currentBalance = parseFloat(userBalance || '0') / 100000000; // Convert from octas to APT
+      const currentBalance = parseFloat(userBalance || '0'); // User balance is already in MOVE format
 
       
       if (currentBalance < currentBet) {
-        alert(`Insufficient balance for bet ${i + 1}. Need ${currentBet} APT but have ${currentBalance.toFixed(8)} APT`);
+        alert(`Insufficient house balance for bet ${i + 1}. Need ${currentBet} MOVE but have ${currentBalance.toFixed(8)} MOVE`);
         break;
       }
 
@@ -334,8 +306,7 @@ export default function Home() {
       setHasSpun(false);
       
       // Deduct bet amount from Redux balance
-      const betAmountInOctas = currentBet * 100000000; // Convert to octas
-      const newBalance = (parseFloat(userBalance || '0') - betAmountInOctas).toString();
+      const newBalance = (parseFloat(userBalance || '0') - currentBet).toFixed(4);
       dispatch(setBalance(newBalance));
 
 
@@ -413,9 +384,8 @@ export default function Home() {
 
       // Update Redux balance with winnings
       if (actualMultiplier > 0) {
-        const currentBalance = parseFloat(userBalance || '0') / 100000000; // Convert from octas to APT
+        const currentBalance = parseFloat(userBalance || '0'); // userBalance is already in MOVE format
         const newBalanceWithWin = currentBalance + winAmount;
-        const newBalanceWithWinOctas = Math.floor(newBalanceWithWin * 100000000); // Convert back to octas
         
         console.log('💰 Auto bet winnings:', {
           currentBalance: currentBalance.toFixed(5),
@@ -423,7 +393,7 @@ export default function Home() {
           newBalance: newBalanceWithWin.toFixed(5)
         });
         
-        dispatch(setBalance(newBalanceWithWinOctas.toString()));
+        dispatch(setBalance(newBalanceWithWin.toFixed(4)));
       }
 
       // Update total profit
@@ -432,10 +402,10 @@ export default function Home() {
       
       // Show notification for win
       if (actualMultiplier > 0) {
-        notification.success(`Congratulations! ${currentBet} APT × ${actualMultiplier.toFixed(2)} = ${winAmount.toFixed(8)} APT won!`);
+        notification.success(`Congratulations! ${currentBet} MOVE × ${actualMultiplier.toFixed(2)} = ${winAmount.toFixed(8)} MOVE won!`);
       }
 
-      // Generate random seed for entropy (timestamp + random for uniqueness)
+      // Generate random seed (timestamp + random for uniqueness)
       const randomSeed = BigInt(Date.now() * 1000 + Math.floor(Math.random() * 1000));
       
       // Store history entry
@@ -448,7 +418,6 @@ export default function Home() {
         payout: winAmount,
         result: resultPosition,
         color: wheelSegmentData.color,
-        entropyProof: null, // Will be populated when Pyth entropy is integrated
         movementTxHash: null,
         movementTxStatus: 'none'
       };
@@ -555,8 +524,8 @@ export default function Home() {
     // Sample statistics
     const gameStatistics = {
       totalBets: '1,856,342',
-      totalVolume: '8.3M APTC',
-      maxWin: '243,500 APTC'
+      totalVolume: '8.3M MOVE',
+      maxWin: '243,500 MOVE'
     };
     
     return (
@@ -733,7 +702,7 @@ export default function Home() {
               setGameMode={setGameMode}
               betAmount={betAmount}
               setBetAmount={setBetAmount}
-              balance={parseFloat(userBalance || '0') / 100000000} // Convert from octas to APT
+              balance={parseFloat(userBalance || '0')} // Balance is already in MOVE format
               manulBet={manulBet}
               risk={selectedRisk}
               setRisk={setSelectedRisk}

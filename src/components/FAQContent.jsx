@@ -16,7 +16,7 @@ const FAQContent = () => {
     },
     {
       question: "What is the maximum payout I can win?",
-      answer: "The maximum payout is 35:1 for a straight-up bet (betting on a single number). With the maximum bet of 1,000 APTC, you can win up to 35,000 APTC on a single spin."
+      answer: "The maximum payout is 35:1 for a straight-up bet (betting on a single number). With the maximum bet of 1,000 MOVE, you can win up to 35,000 MOVE on a single spin."
     },
     {
       question: "Can I play roulette on mobile devices?",

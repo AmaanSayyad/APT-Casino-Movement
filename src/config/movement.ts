@@ -48,13 +48,13 @@ export const MOVEMENT_MAINNET: MovementConfig = {
 
 /**
  * MOVE Token Configuration
- * MOVE uses 8 decimals (same as APT)
+ * MOVE uses 8 decimals (same as MOVE)
  */
 export const MOVE_TOKEN = {
   name: "MOVE",
   symbol: "MOVE",
   decimals: 8,
-  type: "0x1::aptos_coin::AptosCoin" // Movement uses same coin type as Aptos
+  type: "0x1::aptos_coin::AptosCoin" // Movement uses same coin type as Movement
 };
 
 /**
@@ -81,7 +81,7 @@ export function getMovementExplorerTxUrl(
   txHash: string,
   network: MovementConfig = MOVEMENT_BARDOCK
 ): string {
-  return `${network.explorerTxUrl}/${txHash}?network=bardock+testnet`;
+  return `https://explorer.movementnetwork.xyz/txn/${txHash}?network=bardock+testnet`;
 }
 
 /**

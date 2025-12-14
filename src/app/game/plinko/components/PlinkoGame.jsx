@@ -3,14 +3,12 @@ import { useState, forwardRef, useImperativeHandle, useCallback, useEffect, useR
 import Matter from 'matter-js';
 import { useSelector, useDispatch } from 'react-redux';
 import { setBalance, addToBalance } from '@/store/balanceSlice';
-import { useGameLogger } from '@/hooks/useGameLogger';
 import { useMovementGameLogger } from '@/hooks/useMovementGameLogger';
 import { useWallet } from '@aptos-labs/wallet-adapter-react';
 
 const PlinkoGame = forwardRef(({ rowCount = 16, riskLevel = "Medium", onRowChange, betAmount = 0, onBetHistoryChange }, ref) => {
   const dispatch = useDispatch();
   const userBalance = useSelector((state) => state.balance.userBalance);
-  const { logGame } = useGameLogger();
   const { logGame: logMovementGame } = useMovementGameLogger();
   const { account } = useWallet();
   
@@ -49,29 +47,26 @@ const PlinkoGame = forwardRef(({ rowCount = 16, riskLevel = "Medium", onRowChang
 
   // Watch for changes in rowCount or riskLevel props and update local state
   useEffect(() => {
-    console.log('PlinkoGame: rowCount prop changed to:', rowCount);
-    console.log('PlinkoGame: riskLevel prop changed to:', riskLevel);
-    console.log('PlinkoGame: New configuration:', getRowConfig(rowCount, riskLevel));
-    setIsRecreating(true);
-    setCurrentRows(rowCount);
-    setCurrentRiskLevel(riskLevel);
-    setBallPosition(null);
-    setHitPegs(new Set());
-    
-    // Keep bet amount when configuration changes, it will be updated via betAmount prop
-    console.log('PlinkoGame: Configuration changed, current bet amount:', parseFloat(betAmount) || 0);
-    
-    // Clear any existing ball or game state
-    if (engineRef.current) {
-      const Engine = Matter.Engine;
-      Engine.clear(engineRef.current);
+    // Only update if values actually changed
+    if (currentRows !== rowCount || currentRiskLevel !== riskLevel) {
+      setIsRecreating(true);
+      setCurrentRows(rowCount);
+      setCurrentRiskLevel(riskLevel);
+      setBallPosition(null);
+      setHitPegs(new Set());
+      
+      // Clear any existing ball or game state
+      if (engineRef.current) {
+        const Engine = Matter.Engine;
+        Engine.clear(engineRef.current);
+      }
+      
+      // Small delay to show loading state and ensure cleanup
+      setTimeout(() => {
+        setIsRecreating(false);
+      }, 100);
     }
-    
-    // Small delay to show loading state and ensure cleanup
-    setTimeout(() => {
-      setIsRecreating(false);
-    }, 100);
-  }, [rowCount, riskLevel]);
+  }, [rowCount, riskLevel, currentRows, currentRiskLevel]);
 
   // Keep the latest bet amount in a ref for use in async handlers
   const betAmountRef = useRef(0);
@@ -236,7 +231,6 @@ const PlinkoGame = forwardRef(({ rowCount = 16, riskLevel = "Medium", onRowChang
     const pinDistanceX = rows === 16 ? 
       (availableWidth / (binCount - 1)) * 1.05 : 
       availableWidth / (binCount - 1);
-    console.log(`Pin distance X: ${pinDistanceX} for ${binCount} bins, available width: ${availableWidth}`);
     return pinDistanceX;
   };
 
@@ -286,16 +280,11 @@ const PlinkoGame = forwardRef(({ rowCount = 16, riskLevel = "Medium", onRowChang
       }
     }
     
-    console.log(`Generated ${pins.length} pins for ${rows} rows, last row has ${pinsLastRowXCoords.length} pins`);
-    console.log(`Row breakdown: ${Array.from({length: rows}, (_, i) => i === rows - 1 ? binCount + 1 : 3 + i)}`);
-    console.log(`First row pins: ${pins.filter(p => p.row === 0).map(p => p.x.toFixed(1))}`);
-    console.log(`Last row pins: ${pinsLastRowXCoords.map(x => x.toFixed(1))}`);
     return { pins, pinsLastRowXCoords };
   };
 
   // Initialize physics engine
   const initializePhysics = useCallback((rows, riskLevel) => {
-    console.log('PlinkoGame: Initializing physics for', rows, 'rows with risk level:', riskLevel);
     if (typeof window === 'undefined') return;
 
     const Engine = Matter.Engine;
@@ -452,15 +441,7 @@ const PlinkoGame = forwardRef(({ rowCount = 16, riskLevel = "Medium", onRowChang
       }
       const binIndex = Math.max(0, Math.min(gaps - 1, nearestIndex));
       
-      // Debug: Log the bin detection process
-      console.log('=== BIN DETECTION DEBUG ===');
-      console.log('Row configuration:', rows, 'rows,', riskLevel, 'risk');
-      console.log('Ball position X:', ball.position.x);
-      console.log('Last row pin X coordinates:', pinsLastRowXCoords);
-      console.log('Calculated bin index:', binIndex);
-      console.log('Multipliers array length:', multipliers.length);
-      console.log('Multipliers:', multipliers);
-      console.log('==========================');
+      // Bin detection completed
       
       // Ensure binIndex is within valid range for multipliers array
       if (binIndex !== -1 && binIndex < multipliers.length) {
@@ -475,44 +456,23 @@ const PlinkoGame = forwardRef(({ rowCount = 16, riskLevel = "Medium", onRowChang
         const latestBetAmount = betAmountRef.current;
         const reward = latestBetAmount * multiplierValue;
         
-        console.log('=== GAME RESULT ===');
-        console.log('Row configuration:', rows, 'rows,', riskLevel, 'risk');
-        console.log('Bet amount (latest):', betAmountRef.current);
-        console.log('Multiplier:', multiplier, '(bin index:', binIndex, ')');
-        console.log('Reward calculated:', reward, 'APT');
-        console.log('==================');
+        // Game result calculated
         
         // Add reward to current balance (bet amount already deducted when ball was spawned)
         if (latestBetAmount > 0) {
-          console.log('Adding reward to balance:');
-          console.log('  Current balance from Redux:', userBalance);
-          console.log('  Current balance in APT:', parseFloat(userBalance) / 100000000);
-          console.log('  Reward to add:', reward);
-          
-          const currentBalance = parseFloat(userBalance);
-          const rewardInReduxUnit = reward * 100000000;
-          const finalBalance = (currentBalance + rewardInReduxUnit).toFixed(2);
-          
-          console.log('Reward addition:');
-          console.log('  Current balance (Redux unit):', currentBalance);
-          console.log('  Current balance (APT):', (currentBalance / 100000000).toFixed(3));
-          console.log('  Reward added (Redux unit):', rewardInReduxUnit);
-          console.log('  Reward added (APT):', reward);
-          console.log('  Final balance (Redux unit):', finalBalance);
-          console.log('  Final balance (APT):', (parseFloat(finalBalance) / 100000000).toFixed(3));
-          
-          dispatch(addToBalance(rewardInReduxUnit));
+          dispatch(addToBalance(reward));
         }
         
         // Play bin land sound
         playAudio(binLandAudioRef);
         
-        // Generate random seed for entropy (timestamp + random for uniqueness)
+        // Generate random seed (timestamp + random for uniqueness)
         const randomSeed = BigInt(Date.now() * 1000 + Math.floor(Math.random() * 1000));
         
-        // Add to bet history
+        // Add to bet history - only once per ball drop
+        const uniqueId = `${Date.now()}_${Math.random().toString(36).substr(2, 9)}_${binIndex}`;
         const newBetResult = {
-          id: Date.now(),
+          id: uniqueId,
           game: "Plinko",
           title: new Date().toLocaleTimeString(),
           betAmount: latestBetAmount.toFixed(2),
@@ -521,11 +481,23 @@ const PlinkoGame = forwardRef(({ rowCount = 16, riskLevel = "Medium", onRowChang
           timestamp: Date.now(),
           txHash: null,
           explorerUrl: null,
-          entropyProof: null, // Will be populated when Pyth entropy is integrated
           movementTxHash: null,
           movementTxStatus: 'none'
         };
+        
+        // Check if this exact result already exists to prevent duplicates
         setBetHistory(prev => {
+          // Check if we already have a recent entry with same timestamp (within 1 second)
+          const recentDuplicate = prev.find(bet => 
+            Math.abs(bet.timestamp - newBetResult.timestamp) < 1000 &&
+            bet.betAmount === newBetResult.betAmount &&
+            bet.multiplier === newBetResult.multiplier
+          );
+          
+          if (recentDuplicate) {
+            return prev; // Don't add duplicate
+          }
+          
           const updated = [newBetResult, ...prev.slice(0, 99)]; // Keep last 100
           return updated;
         });
@@ -535,37 +507,8 @@ const PlinkoGame = forwardRef(({ rowCount = 16, riskLevel = "Medium", onRowChang
           onBetHistoryChange(newBetResult);
         }
         
-        // Log game to blockchain (existing system)
-        if (account?.address && latestBetAmount > 0) {
-          const gameResult = `${rows}rows_${riskLevel}_bin${binIndex}_${multiplier}`;
-          logGame({
-            gameType: 'plinko',
-            playerAddress: account.address,
-            betAmount: latestBetAmount,
-            result: gameResult,
-            payout: reward,
-          }).then(res => {
-            if (res?.success) {
-              console.log('Game successfully logged to blockchain');
-              // attach tx hash to latest history entry
-              setBetHistory(prev => {
-                if (prev.length === 0) return prev;
-                const [first, ...rest] = prev;
-                const updatedFirst = { ...first, txHash: res.transactionHash || null, explorerUrl: res.explorerUrl || null };
-                return [updatedFirst, ...rest];
-              });
-              if (onBetHistoryChange) {
-                onBetHistoryChange({ ...newBetResult, txHash: res.transactionHash || null, explorerUrl: res.explorerUrl || null });
-              }
-            }
-          }).catch(error => {
-            console.error('Failed to log game to blockchain:', error);
-          });
-        }
-        
         // Log game to Movement blockchain
         if (account?.address && latestBetAmount > 0) {
-          console.log('🎯 Logging Plinko game to Movement blockchain...');
           
           // Update history to show pending status
           setBetHistory(prev => {
@@ -592,11 +535,6 @@ const PlinkoGame = forwardRef(({ rowCount = 16, riskLevel = "Medium", onRowChang
             randomSeed: randomSeed,
           }).then(res => {
             if (res?.success) {
-              console.log('✅ Plinko game successfully logged to Movement blockchain');
-              console.log('├── Transaction Hash:', res.transactionHash);
-              console.log('├── Explorer URL:', res.explorerUrl);
-              console.log('├── Random Seed:', randomSeed.toString());
-              console.log('└── Game Result:', gameResult);
               
               // Update history with successful Movement transaction
               setBetHistory(prev => {
@@ -618,7 +556,6 @@ const PlinkoGame = forwardRef(({ rowCount = 16, riskLevel = "Medium", onRowChang
                 });
               }
             } else {
-              console.error('❌ Failed to log Plinko game to Movement:', res.error);
               
               // Update history to show failed status
               setBetHistory(prev => {
@@ -633,7 +570,6 @@ const PlinkoGame = forwardRef(({ rowCount = 16, riskLevel = "Medium", onRowChang
               }
             }
           }).catch(error => {
-            console.error('❌ Error logging Plinko game to Movement blockchain:', error);
             
             // Update history to show failed status
             setBetHistory(prev => {
@@ -651,12 +587,13 @@ const PlinkoGame = forwardRef(({ rowCount = 16, riskLevel = "Medium", onRowChang
         
         setTimeout(() => {
           setIsDropping(false);
-          console.log(`Ball landed in bin ${binIndex} with multiplier ${multipliers[binIndex]}, payout: $${reward}`);
+          // Remove ball from world after animation
+          Composite.remove(engine.world, ball);
         }, 100);
+      } else {
+        // Remove ball immediately if invalid bin
+        Composite.remove(engine.world, ball);
       }
-      
-      // Remove ball from world
-      Composite.remove(engine.world, ball);
     };
 
     // Start the engine
@@ -668,7 +605,9 @@ const PlinkoGame = forwardRef(({ rowCount = 16, riskLevel = "Medium", onRowChang
 
   // Effect to initialize physics when component mounts or rows change
   useEffect(() => {
-    const { pins, pinsLastRowXCoords } = initializePhysics(currentRows, currentRiskLevel);
+    if (!isRecreating) {
+      const { pins, pinsLastRowXCoords } = initializePhysics(currentRows, currentRiskLevel);
+    }
     
     return () => {
       if (renderRef.current) {
@@ -684,7 +623,7 @@ const PlinkoGame = forwardRef(({ rowCount = 16, riskLevel = "Medium", onRowChang
         Engine.clear(engineRef.current);
       }
     };
-  }, [currentRows, currentRiskLevel, initializePhysics]);
+  }, [currentRows, currentRiskLevel, isRecreating]);
 
   // Function to start a bet and drop the ball
   const dropBall = useCallback(() => {
@@ -693,15 +632,10 @@ const PlinkoGame = forwardRef(({ rowCount = 16, riskLevel = "Medium", onRowChang
     // Simple balance check - if user doesn't have enough balance, don't allow playing
     const currentBalance = parseFloat(userBalance);
     const latestBetAmount = betAmountRef.current;
-    const betAmountInReduxUnit = latestBetAmount * 100000000;
+    const currentBalanceMOVE = parseFloat(userBalance || '0'); // User balance is already in MOVE format
     
-    if (betAmountInReduxUnit > currentBalance) {
-      console.warn('Insufficient balance for bet:', {
-        currentBalance: currentBalance / 100000000,
-        betAmount: latestBetAmount,
-        balanceInAPT: (currentBalance / 100000000).toFixed(3)
-      });
-      alert(`Insufficient balance! You have ${(currentBalance / 100000000).toFixed(3)} APT but need ${latestBetAmount} APT`);
+    if (latestBetAmount > currentBalanceMOVE) {
+      alert(`Insufficient house balance! You have ${currentBalanceMOVE.toFixed(3)} MOVE but need ${latestBetAmount} MOVE`);
       return;
     }
     
@@ -711,9 +645,8 @@ const PlinkoGame = forwardRef(({ rowCount = 16, riskLevel = "Medium", onRowChang
 
     // Deduct bet amount when ball is spawned
     if (latestBetAmount > 0) {
-      const newBalance = (currentBalance - betAmountInReduxUnit).toFixed(2);
+      const newBalance = (currentBalance - latestBetAmount).toFixed(4);
       dispatch(setBalance(newBalance));
-      console.log('Bet amount deducted:', latestBetAmount, 'New balance:', newBalance);
     }
 
     const Bodies = Matter.Bodies;
@@ -815,11 +748,7 @@ const PlinkoGame = forwardRef(({ rowCount = 16, riskLevel = "Medium", onRowChang
       const total = totalPayouts - totalBetAmounts;
       setTotalWon(total);
       
-      console.log('Game stats updated from history:', {
-        gamesPlayed: betHistory.length,
-        bestMultiplier: bestMulti,
-        totalWon: total
-      });
+      // Game stats updated
     }
   }, [betHistory]);
 
@@ -877,10 +806,10 @@ const PlinkoGame = forwardRef(({ rowCount = 16, riskLevel = "Medium", onRowChang
                     {/* Bet History - Right Side */}
           <div className="absolute right-4 top-4 z-10">
             <div className="space-y-2">
-              {betHistory.slice(0, 5).map((bet, index) => (
-                <div key={index} className="w-16 h-16 bg-[#2A0025] border border-[#333947] rounded-lg flex flex-col items-center justify-center p-1">
+              {betHistory.slice(0, 5).map((bet) => (
+                <div key={bet.id} className="w-16 h-16 bg-[#2A0025] border border-[#333947] rounded-lg flex flex-col items-center justify-center p-1">
                   <span className="w-full text-center leading-tight text-xs font-bold text-white">{bet.multiplier}</span>
-                  <span className="w-full text-center leading-tight text-[10px] text-green-400">+{bet.payout} APT</span>
+                  <span className="w-full text-center leading-tight text-[10px] text-green-400">+{bet.payout} MOVE</span>
                 </div>
               ))}
               {Array.from({ length: Math.max(0, 5 - Math.min(5, betHistory.length)) }).map((_, index) => (
@@ -938,7 +867,7 @@ const PlinkoGame = forwardRef(({ rowCount = 16, riskLevel = "Medium", onRowChang
           <div className="text-xs text-gray-400">Best Multiplier</div>
         </div>
         <div className="text-center">
-          <div className="text-2xl font-bold text-white">{totalWon.toFixed(2)} APT</div>
+          <div className="text-2xl font-bold text-white">{totalWon.toFixed(2)} MOVE</div>
           <div className="text-xs text-gray-400">Total Won</div>
         </div>
       </div>

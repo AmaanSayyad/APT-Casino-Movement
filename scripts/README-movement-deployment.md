@@ -5,7 +5,7 @@ This guide explains how to deploy the Game Logger contract to Movement Bardock t
 ## Prerequisites
 
 1. **Node.js** installed (v16 or higher)
-2. **Movement CLI** or **Aptos CLI** installed
+2. **Movement CLI** or **Movement CLI** installed
 3. **Treasury private key** with MOVE tokens
 
 ## Installation
@@ -22,11 +22,11 @@ For Linux x86_64:
 curl -LO https://github.com/movementlabsxyz/homebrew-movement-cli/releases/download/bypass-homebrew/movement-move2-testnet-linux-x86_64.tar.gz && mkdir -p temp_extract && tar -xzf movement-move2-testnet-linux-x86_64.tar.gz -C temp_extract && chmod +x temp_extract/movement && sudo mv temp_extract/movement /usr/local/bin/movement && rm -rf temp_extract
 ```
 
-### Alternative: Aptos CLI
+### Alternative: Movement CLI
 
-If Movement CLI is not available, you can use Aptos CLI:
+If Movement CLI is not available, you can use Movement CLI:
 ```bash
-curl -fsSL "https://aptos.dev/scripts/install_cli.py" | python3
+curl -fsSL "https://movement.dev/scripts/install_cli.py" | python3
 ```
 
 ## Setup
@@ -94,7 +94,7 @@ After deployment, verify your contract:
 2. **Test contract functions:**
 ```javascript
 // Example: Get game history
-const gameHistory = await aptos.view({
+const gameHistory = await movement.view({
   function: `${treasuryAddress}::game_logger::get_game_history`,
   functionArguments: [treasuryAddress]
 });

@@ -7,7 +7,7 @@ export const useToken = (address) => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  // Mock balance for Aptos testnet
+  // Mock balance for Movement testnet
   useEffect(() => {
     if (address) {
       // Simulate loading

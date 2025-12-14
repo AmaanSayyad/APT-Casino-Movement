@@ -1,4 +1,4 @@
-const { AptosAccount, AptosClient, CoinClient } = require('aptos');
+const { AptosAccount, AptosClient, CoinClient } = require('movement');
 require('dotenv').config();
 
 const APTOS_NODE_URL = process.env.NEXT_PUBLIC_APTOS_NETWORK === 'mainnet' 
@@ -24,7 +24,7 @@ async function initTreasury() {
     try {
       // Try to check balance to see if coin store exists
       const balance = await coinClient.checkBalance(treasuryAccount);
-      console.log('✅ Treasury already initialized with balance:', (balance / 100000000).toFixed(4), 'APT');
+      console.log('✅ Treasury already initialized with balance:', (balance / 100000000).toFixed(4), 'MOVE');
     } catch (error) {
       console.log('🔧 Treasury needs initialization...');
       
@@ -41,7 +41,7 @@ async function initTreasury() {
         
         // Check balance after initialization
         const balance = await coinClient.checkBalance(treasuryAccount);
-        console.log('💰 Treasury balance:', (balance / 100000000).toFixed(4), 'APT');
+        console.log('💰 Treasury balance:', (balance / 100000000).toFixed(4), 'MOVE');
         
       } catch (initError) {
         console.error('❌ Failed to initialize treasury:', initError.message);

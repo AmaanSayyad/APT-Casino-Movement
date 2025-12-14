@@ -35,10 +35,10 @@ NEXT_PUBLIC_APTOS_EXPLORER_URL=https://explorer.aptoslabs.com
 ```bash
 # Update network settings in Move.toml for mainnet
 cd move-contracts
-aptos init --profile mainnet --network mainnet
+movement init --profile mainnet --network mainnet
 
 # Deploy contracts
-aptos move publish --profile mainnet --named-addresses apt_casino=<YOUR_MAINNET_ADDRESS>
+movement move publish --profile mainnet --named-addresses apt_casino=<YOUR_MAINNET_ADDRESS>
 ```
 
 ### Step 3: Frontend Build and Deploy
@@ -100,7 +100,7 @@ public entry fun user_place_bet(user: &signer, amount: u64, bet_kind: u8, bet_va
 ## 📊 Monitoring and Analytics
 
 ### 1. Blockchain Monitoring
-- [ ] Aptos Explorer integration
+- [ ] Movement Explorer integration
 - [ ] Transaction monitoring
 - [ ] Gas fee tracking
 - [ ] Error rate monitoring
@@ -140,9 +140,9 @@ public entry fun user_place_bet(user: &signer, amount: u64, bet_kind: u8, bet_va
 ## 💰 Mainnet Deployment Costs
 
 ### 1. Smart Contract Deployment
-- Module deployment: ~100-500 APT
-- Resource creation: ~10-50 APT
-- Gas fees: ~50-200 APT
+- Module deployment: ~100-500 MOVE
+- Resource creation: ~10-50 MOVE
+- Gas fees: ~50-200 MOVE
 
 ### 2. Infrastructure
 - Hosting: $50-500/month
@@ -166,7 +166,7 @@ public entry fun user_place_bet(user: &signer, amount: u64, bet_kind: u8, bet_va
 ### 2. Rollback Procedure
 ```bash
 # 1. Emergency pause
-aptos move run --function-id '0x...::casino::emergency_pause'
+movement move run --function-id '0x...::casino::emergency_pause'
 
 # 2. Frontend maintenance mode
 # 3. User notification

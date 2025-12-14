@@ -5,7 +5,7 @@
  */
 
 /**
- * Shortens a Movement/Aptos address to display format
+ * Shortens a Movement/Movement address to display format
  * 
  * @param address - Full address string (with or without 0x prefix)
  * @returns Shortened address in format 0x{first4}...{last4}
@@ -41,7 +41,7 @@ export function shortenAddress(address: string): string {
 }
 
 /**
- * Validates if a string is a valid Movement/Aptos address format
+ * Validates if a string is a valid Movement/Movement address format
  * 
  * @param address - Address string to validate
  * @returns True if address format is valid
@@ -53,7 +53,7 @@ export function isValidAddress(address: string): boolean {
   const cleanAddress = address.startsWith('0x') ? address.slice(2) : address;
   
   // Check if it's a valid hex string of appropriate length
-  // Aptos addresses can be 1-64 hex characters (leading zeros can be omitted)
+  // Movement addresses can be 1-64 hex characters (leading zeros can be omitted)
   const hexRegex = /^[0-9a-fA-F]{1,64}$/;
   return hexRegex.test(cleanAddress);
 }
@@ -120,7 +120,7 @@ export function octasToMove(octas: bigint | string | number): number {
  * 
  * @example
  * generateMovementExplorerUrl("0xabc123...")
- * // Returns: "https://explorer.movementnetwork.xyz/?network=bardock+testnet#/txn/0xabc123..."
+ * // Returns: "https://explorer.movementnetwork.xyz/txn/0xabc123...?network=bardock+testnet"
  */
 export function generateMovementExplorerUrl(
   transactionHash: string,
@@ -130,8 +130,8 @@ export function generateMovementExplorerUrl(
     throw new Error('Transaction hash is required');
   }
   
-  // Format: {explorerBaseUrl}/?network=bardock+testnet#/txn/{transactionHash}
-  return `${explorerBaseUrl}/?network=bardock+testnet#/txn/${transactionHash}`;
+  // Format: {explorerBaseUrl}/txn/{transactionHash}?network=bardock+testnet
+  return `${explorerBaseUrl}/txn/${transactionHash}?network=bardock+testnet`;
 }
 
 /**

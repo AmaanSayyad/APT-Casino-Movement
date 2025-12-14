@@ -50,8 +50,8 @@ export default function Plinko() {
   const PlinkoHeader = () => {
     const gameStatistics = {
       totalBets: '1,234,567',
-      totalVolume: '5.2M APTC',
-      maxWin: '120,000 APTC'
+      totalVolume: '5.2M MOVE',
+      maxWin: '120,000 MOVE'
     };
     return (
       <div className="relative text-white px-4 md:px-8 lg:px-20 mb-8 pt-28 md:pt-32 lg:pt-36 mt-6">
@@ -181,13 +181,11 @@ export default function Plinko() {
   };
 
   const handleBetAmountChange = (amount) => {
-    console.log('Main page received bet amount:', amount);
     setCurrentBetAmount(amount);
   };
 
   const handleBet = () => {
     // Trigger the ball dropping animation in PlinkoGame. Balance and bet validity are checked inside PlinkoGame
-    console.log('Main page handleBet called');
     if (plinkoGameRef.current && plinkoGameRef.current.dropBall) {
       plinkoGameRef.current.dropBall();
     }
@@ -198,18 +196,12 @@ export default function Plinko() {
   };
 
   const handleRowChange = (newRows) => {
-    console.log('Main page: Row change requested to:', newRows);
     setCurrentRows(newRows);
-    // Don't reset bet amount, let GameControls handle it
-    console.log('Main page: Row changed, keeping bet amount:', currentBetAmount);
     // The PlinkoGame component will automatically update when the rowCount prop changes
   };
 
   const handleRiskLevelChange = (newRiskLevel) => {
-    console.log('Main page: Risk level change requested to:', newRiskLevel);
     setCurrentRiskLevel(newRiskLevel);
-    // Don't reset bet amount, let GameControls handle it
-    console.log('Main page: Risk level changed, keeping bet amount:', currentBetAmount);
     // The PlinkoGame component will automatically update when the riskLevel prop changes
   };
 

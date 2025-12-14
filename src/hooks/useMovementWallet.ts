@@ -1,14 +1,13 @@
 /**
  * Movement Wallet Hook
  * 
- * Custom hook for managing wallet connections to Movement Bardock testnet.
- * Uses @aptos-labs/wallet-adapter-react for wallet integration.
+ * Hook for managing wallet connections to Movement Bardock testnet.
+ * Uses Movement Wallet Adapter for Movement-compatible wallets (OKX, Razor, Nightly).
  */
 
+import { useMemo, useEffect } from 'react';
 import { useWallet } from '@aptos-labs/wallet-adapter-react';
-import { useCallback, useMemo } from 'react';
 import { MOVEMENT_BARDOCK, type MovementConfig } from '@/config/movement';
-import { Network } from '@aptos-labs/ts-sdk';
 
 export interface UseMovementWallet {
   isConnected: boolean;
@@ -16,37 +15,36 @@ export interface UseMovementWallet {
   shortAddress: string | null;
   network: MovementConfig;
   connect: (walletName?: string) => Promise<void>;
-  disconnect: () => void;
-  switchNetwork: () => Promise<void>;
+  disconnect: () => Promise<void>;
   isCorrectNetwork: boolean;
   isLoading: boolean;
-  wallet: any;
   error: string | null;
+  walletName: string | null;
+  availableWallets: string[];
 }
 
 /**
- * Hook for managing Movement wallet connections
+ * Hook for managing Movement wallet connections using Movement Wallet Adapter
  * 
  * @returns UseMovementWallet interface with wallet state and functions
  */
 export function useMovementWallet(): UseMovementWallet {
-  const {
-    connected,
-    account,
+  const { 
+    connected, 
+    account, 
+    connect: aptosConnect, 
+    disconnect: aptosDisconnect,
     wallet,
-    connect: walletConnect,
-    disconnect: walletDisconnect,
-    changeNetwork,
-    isLoading,
-    network: currentNetwork
+    wallets,
+    isLoading
   } = useWallet();
 
-  // Get current address as string
+  // Extract address from account and ensure it's a string
   const address = account?.address ? String(account.address) : null;
 
   // Create shortened address format: 0x{first4}...{last4}
   const shortAddress = useMemo(() => {
-    if (!address) return null;
+    if (!address || typeof address !== 'string') return null;
     if (address.length < 10) return address;
     
     // Remove 0x prefix for processing
@@ -58,67 +56,83 @@ export function useMovementWallet(): UseMovementWallet {
     return `0x${first4}...${last4}`;
   }, [address]);
 
-  // Check if connected to correct network (Movement Bardock)
+  // For Movement, assume correct network if connected (wallet should handle network switching)
   const isCorrectNetwork = useMemo(() => {
-    if (!connected || !currentNetwork) return false;
-    
-    // Check if current network matches Movement Bardock
-    // Movement uses chainId 250 for Bardock testnet
-    const chainIdStr = String(currentNetwork.chainId);
-    const targetChainId = String(MOVEMENT_BARDOCK.chainId);
-    
-    return chainIdStr === targetChainId ||
-           currentNetwork.name?.toLowerCase().includes('movement') ||
-           currentNetwork.name?.toLowerCase().includes('bardock');
-  }, [connected, currentNetwork]);
+    return connected; // Movement wallets should connect to correct network
+  }, [connected]);
 
-  // Connect to wallet with Movement network validation
-  const connect = useCallback(async (walletName?: string) => {
-    try {
-      if (walletName) {
-        await walletConnect(walletName);
-      } else {
-        // For now, we'll require a wallet name to be specified
-        throw new Error('Please specify a wallet name to connect');
+  // Get available wallet names (deduplicated)
+  const availableWallets = useMemo(() => {
+    if (!wallets) return [];
+    
+    // Create a Set to ensure unique wallet names
+    const uniqueNames = new Set<string>();
+    wallets.forEach(wallet => {
+      if (wallet.name) {
+        uniqueNames.add(wallet.name);
       }
+    });
+    
+    return Array.from(uniqueNames);
+  }, [wallets]);
+
+  // Debug logging (after all variables are defined)
+  useEffect(() => {
+    console.log('🔍 Movement Wallet State Changed:', {
+      connected,
+      address,
+      addressType: typeof address,
+      shortAddress,
+      walletName: wallet?.name,
+      availableWallets: availableWallets.length,
+      isLoading,
+      account: account ? 'exists' : 'null'
+    });
+  }, [connected, address, shortAddress, wallet?.name, availableWallets.length, isLoading, account]);
+
+  // Current wallet name
+  const walletName = wallet?.name || null;
+
+  // Connect to wallet - if no walletName provided, use first available
+  const connect = async (walletName?: string) => {
+    try {
+      // If already connected, don't try to connect again
+      if (connected && address) {
+        console.log('✅ Wallet already connected:', { walletName: wallet?.name, address });
+        return;
+      }
+
+      if (!wallets || wallets.length === 0) {
+        throw new Error('No Movement-compatible wallets found. Please install OKX Wallet, Razor, or Nightly.');
+      }
+
+      // If no specific wallet requested, use first available
+      const targetWalletName = walletName || wallets[0].name;
+      console.log('🔗 Connecting to wallet:', targetWalletName);
+      
+      await aptosConnect(targetWalletName);
     } catch (error) {
-      console.error('Failed to connect wallet:', error);
+      console.error('❌ Failed to connect Movement wallet:', error);
+      
+      // Handle "already connected" error gracefully
+      if (error instanceof Error && error.message.includes('already connected')) {
+        console.log('ℹ️ Wallet already connected, ignoring error');
+        return;
+      }
+      
       throw error;
     }
-  }, [walletConnect]);
+  };
 
   // Disconnect wallet
-  const disconnect = useCallback(() => {
+  const disconnect = async () => {
     try {
-      walletDisconnect();
+      await aptosDisconnect();
     } catch (error) {
-      console.error('Failed to disconnect wallet:', error);
+      console.error('Failed to disconnect Movement wallet:', error);
       throw error;
     }
-  }, [walletDisconnect]);
-
-  // Switch to Movement Bardock network
-  const switchNetwork = useCallback(async () => {
-    try {
-      if (!changeNetwork) {
-        throw new Error('Network switching not supported by current wallet');
-      }
-
-      // Try to switch to Movement Bardock testnet
-      await changeNetwork(Network.CUSTOM);
-    } catch (error) {
-      console.error('Failed to switch network:', error);
-      throw error;
-    }
-  }, [changeNetwork]);
-
-  // Error handling
-  const error = useMemo(() => {
-    if (connected && !isCorrectNetwork) {
-      return 'Please switch to Movement Bardock testnet';
-    }
-    return null;
-  }, [connected, isCorrectNetwork]);
+  };
 
   return {
     isConnected: connected,
@@ -127,11 +141,11 @@ export function useMovementWallet(): UseMovementWallet {
     network: MOVEMENT_BARDOCK,
     connect,
     disconnect,
-    switchNetwork,
     isCorrectNetwork,
     isLoading,
-    wallet,
-    error
+    error: null, // Movement wallet adapter handles errors internally
+    walletName,
+    availableWallets
   };
 }
 

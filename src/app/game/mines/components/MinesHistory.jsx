@@ -223,7 +223,6 @@ const MinesHistory = ({ gameHistory = [], userStats = {} }) => {
           >
             Time <SortIcon field="time" />
           </div>
-          <div className="text-white/70">Entropy</div>
           <div className="text-white/70">Movement</div>
         </div>
         
@@ -288,21 +287,6 @@ const MinesHistory = ({ gameHistory = [], userStats = {} }) => {
                   <HiClock className="text-purple-400" size={8} />
                 </div>
                 <span>{game.time}</span>
-              </div>
-              <div className="flex items-center">
-                {game.entropyProof ? (
-                  <a
-                    href={game.entropyProof}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-blue-400 hover:text-blue-300 underline text-xs"
-                    title="View Pyth Entropy Proof"
-                  >
-                    Entropy
-                  </a>
-                ) : (
-                  <span className="text-gray-500 text-xs">N/A</span>
-                )}
               </div>
               <div className="flex items-center justify-center">
                 <MovementTxLink

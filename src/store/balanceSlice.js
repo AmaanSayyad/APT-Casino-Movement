@@ -7,12 +7,13 @@ const loadInitialState = () => {
     const savedLoading = localStorage.getItem('isLoading');
     
     // Normal balance validation (restored)
-    let cleanBalance = "0";
+    let cleanBalance = "0.0000";
     if (savedBalance && !isNaN(savedBalance) && parseFloat(savedBalance) >= 0) {
-      cleanBalance = savedBalance;
+      // Format existing balance to 4 decimal places
+      cleanBalance = parseFloat(savedBalance).toFixed(4);
     } else {
       // Reset invalid balance to 0
-      localStorage.setItem('userBalance', "0");
+      localStorage.setItem('userBalance', "0.0000");
     }
     
     return {
@@ -21,7 +22,7 @@ const loadInitialState = () => {
     };
   }
   return {
-    userBalance: "0",
+    userBalance: "0.0000",
     isLoading: false,
   };
 };
@@ -34,12 +35,13 @@ const balanceSlice = createSlice({
   reducers: {
     setBalance(state, action) {
       const newBalance = action.payload;
-      // Ensure balance never goes negative
+      // Ensure balance never goes negative and format to 4 decimal places
       if (parseFloat(newBalance) < 0) {
-        state.userBalance = "0";
+        state.userBalance = "0.0000";
         console.warn('Attempted to set negative balance, setting to 0 instead');
       } else {
-        state.userBalance = newBalance;
+        // Format to 4 decimal places for consistency
+        state.userBalance = parseFloat(newBalance).toFixed(4);
       }
       // Persist to localStorage
       if (typeof window !== 'undefined') {
@@ -49,7 +51,7 @@ const balanceSlice = createSlice({
     addToBalance(state, action) {
       const amountToAdd = parseFloat(action.payload);
       const currentBalance = parseFloat(state.userBalance);
-      const newBalance = Math.max(0, currentBalance + amountToAdd).toFixed(2);
+      const newBalance = Math.max(0, currentBalance + amountToAdd).toFixed(4);
       state.userBalance = newBalance;
       // Persist to localStorage
       if (typeof window !== 'undefined') {
@@ -59,7 +61,7 @@ const balanceSlice = createSlice({
     subtractFromBalance(state, action) {
       const amountToSubtract = parseFloat(action.payload);
       const currentBalance = parseFloat(state.userBalance);
-      const newBalance = Math.max(0, currentBalance - amountToSubtract).toFixed(2);
+      const newBalance = Math.max(0, currentBalance - amountToSubtract).toFixed(4);
       state.userBalance = newBalance;
       // Persist to localStorage
       if (typeof window !== 'undefined') {

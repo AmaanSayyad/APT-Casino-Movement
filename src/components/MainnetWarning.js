@@ -20,12 +20,12 @@ export default function MainnetWarning() {
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  // Detect Aptos wallet network and show warning automatically
+  // Detect Movement wallet network and show warning automatically
   useEffect(() => {
     const readNetwork = async () => {
       try {
-        if (typeof window !== 'undefined' && window.aptos?.network) {
-          const n = await window.aptos.network();
+        if (typeof window !== 'undefined' && window.movement?.network) {
+          const n = await window.movement.network();
           if (n?.name) {
             const networkName = String(n.name).toLowerCase();
             setWalletNetworkName(networkName);
@@ -44,7 +44,7 @@ export default function MainnetWarning() {
       readNetwork();
     }
 
-    const off = window?.aptos?.onNetworkChange?.((n) => {
+    const off = window?.movement?.onNetworkChange?.((n) => {
       try { 
         const networkName = String(n?.name || '').toLowerCase();
         setWalletNetworkName(networkName);
@@ -72,18 +72,18 @@ export default function MainnetWarning() {
 
   const switchToTestnet = async () => {
     try {
-      if (window?.aptos?.switchNetwork) {
-        await window.aptos.switchNetwork('Testnet');
-      } else if (window?.aptos?.changeNetwork) {
-        await window.aptos.changeNetwork('Testnet');
+      if (window?.movement?.switchNetwork) {
+        await window.movement.switchNetwork('Testnet');
+      } else if (window?.movement?.changeNetwork) {
+        await window.movement.changeNetwork('Testnet');
       } else {
-        alert('Please open your Aptos wallet and switch network to Testnet.');
+        alert('Please open your Movement wallet and switch network to Testnet.');
         return;
       }
       setWalletNetworkName('testnet');
       setShowWarning(false);
     } catch (e) {
-      console.error('Failed to switch Aptos network:', e);
+      console.error('Failed to switch Movement network:', e);
       alert('Network switch failed. Please switch to Testnet in your wallet.');
     }
   };

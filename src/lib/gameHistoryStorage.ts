@@ -209,6 +209,13 @@ function findStoredTransaction(txHash: string): { key: string; data: StoredGameE
 }
 
 /**
+ * Find stored transaction by hash (exported version)
+ */
+export function findStoredTransactionByHash(txHash: string): { key: string; data: StoredGameEntry } | null {
+  return findStoredTransaction(txHash);
+}
+
+/**
  * Get storage index
  */
 function getStorageIndex(): string[] {

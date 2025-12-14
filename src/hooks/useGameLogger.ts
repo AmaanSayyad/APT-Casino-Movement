@@ -43,9 +43,9 @@ export const useGameLogger = () => {
         console.log('├── Explorer URL:', data.explorerUrl);
         console.log('├── Game Type:', params.gameType);
         console.log('├── Player:', params.playerAddress);
-        console.log('├── Bet Amount:', params.betAmount, 'APT');
+        console.log('├── Bet Amount:', params.betAmount, 'MOVE');
         console.log('├── Result:', params.result);
-        console.log('└── Payout:', params.payout, 'APT');
+        console.log('└── Payout:', params.payout, 'MOVE');
         return { success: true, transactionHash: data.transactionHash, explorerUrl: data.explorerUrl };
       } else {
         console.error('❌ FAILED TO LOG GAME:', data.error);

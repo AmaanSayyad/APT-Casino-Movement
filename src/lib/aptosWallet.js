@@ -1,8 +1,8 @@
 import { AptosWalletAdapterProvider, useWallet } from "@aptos-labs/wallet-adapter-react";
 import { WalletReadyState } from "@aptos-labs/wallet-adapter-core";
 
-// Import Aptos network configuration
-import { APTOS_NETWORKS, DEFAULT_NETWORK } from './aptos';
+// Import Movement network configuration
+import { APTOS_NETWORKS, DEFAULT_NETWORK } from './movement';
 
 // Configure wallets - for now we'll use a simplified approach
 // In a real implementation, you would import and configure each wallet adapter
@@ -28,7 +28,7 @@ export const AptosWalletProvider = ({ children }) => {
       plugins={wallets}
       autoConnect={autoConnect}
       onError={(error) => {
-        console.error("Aptos wallet error:", error);
+        console.error("Movement wallet error:", error);
       }}
     >
       {children}

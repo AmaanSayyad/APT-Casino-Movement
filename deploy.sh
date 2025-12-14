@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # APT Casino Deployment Script
-# This script deploys the entire casino application to Aptos testnet/mainnet and Vercel
+# This script deploys the entire casino application to Movement testnet/mainnet and Vercel
 
 set -e
 
@@ -60,9 +60,9 @@ check_prerequisites() {
         exit 1
     fi
     
-    # Check Aptos CLI
-    if ! command_exists aptos; then
-        print_warning "Aptos CLI is not installed. Installing..."
+    # Check Movement CLI
+    if ! command_exists movement; then
+        print_warning "Movement CLI is not installed. Installing..."
         curl -fsSL "https://aptoslabs.com/scripts/install_cli.py" | python3
     fi
     
@@ -108,9 +108,9 @@ compile_contracts() {
     cd "$PROJECT_ROOT/move-contracts"
     
     if [ "$VERBOSE" = true ]; then
-        aptos move compile --verbose
+        movement move compile --verbose
     else
-        aptos move compile
+        movement move compile
     fi
     
     if [ $? -eq 0 ]; then
@@ -205,7 +205,7 @@ run_tests() {
     
     # Run contract tests
     cd move-contracts
-    aptos move test
+    movement move test
     
     print_status "Tests completed"
 }

@@ -10,7 +10,7 @@ const TestimonialsSection = () => {
       name: 'Michael T.',
       avatar: '/images/avatars/avatar1.png',
       rating: 5,
-              text: 'APT Casino offers the most transparent gaming experience I\'ve found on Aptos. The provably fair system gives me confidence that games are legitimate, and I\'ve already won over 500 APT tokens!',
+              text: 'APT Casino offers the most transparent gaming experience I\'ve found on Movement. The provably fair system gives me confidence that games are legitimate, and I\'ve already won over 500 MOVE tokens!',
       game: 'Roulette',
       amount: 520
     },
@@ -28,7 +28,7 @@ const TestimonialsSection = () => {
       name: 'CryptoQueen',
       avatar: '/images/avatars/avatar3.png',
       rating: 5,
-      text: 'The DeFi lending integration is brilliant. I was able to use my collateral to borrow APT for games, and when I won big, I paid back the loan and kept the profits. Smart financial gaming!',
+      text: 'The DeFi lending integration is brilliant. I was able to use my collateral to borrow MOVE for games, and when I won big, I paid back the loan and kept the profits. Smart financial gaming!',
       game: 'Fortune Tiger',
       amount: 876
     },
@@ -106,7 +106,7 @@ const TestimonialsSection = () => {
                     </div>
                     <div>
                       <p className="text-white/50 text-sm">Biggest Win</p>
-                      <p className="text-white font-bold">{testimonials[activeIndex].amount} APT</p>
+                      <p className="text-white font-bold">{testimonials[activeIndex].amount} MOVE</p>
                     </div>
                   </div>
                 </div>
@@ -153,7 +153,7 @@ const TestimonialsSection = () => {
                     </div>
                     
                     <span className="ml-auto text-white/60 text-sm">
-                      {testimonial.amount} APT
+                      {testimonial.amount} MOVE
                     </span>
                   </div>
                 </button>

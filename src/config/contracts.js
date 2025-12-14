@@ -1,4 +1,4 @@
-// Aptos Network Configuration
+// Movement Network Configuration
 export const APTOS_NETWORKS = {
   TESTNET: 'testnet',
   MAINNET: 'mainnet',
@@ -6,7 +6,7 @@ export const APTOS_NETWORKS = {
   MOVEMENT_BARDOCK: 'movement-bardock'
 };
 
-// Aptos Network URLs
+// Movement Network URLs
 export const APTOS_NETWORK_URLS = {
   [APTOS_NETWORKS.TESTNET]: "https://fullnode.testnet.aptoslabs.com",
   [APTOS_NETWORKS.MAINNET]: "https://fullnode.mainnet.aptoslabs.com",
@@ -14,14 +14,14 @@ export const APTOS_NETWORK_URLS = {
   [APTOS_NETWORKS.MOVEMENT_BARDOCK]: "https://testnet.movementnetwork.xyz/v1"
 };
 
-// Aptos Faucet URLs
+// Movement Faucet URLs
 export const APTOS_FAUCET_URLS = {
   [APTOS_NETWORKS.TESTNET]: "https://faucet.testnet.aptoslabs.com",
   [APTOS_NETWORKS.DEVNET]: "https://faucet.devnet.aptoslabs.com",
   [APTOS_NETWORKS.MOVEMENT_BARDOCK]: "https://faucet.movementnetwork.xyz"
 };
 
-// Aptos Explorer URLs
+// Movement Explorer URLs
 export const APTOS_EXPLORER_URLS = {
   [APTOS_NETWORKS.TESTNET]: "https://explorer.aptoslabs.com/account",
   [APTOS_NETWORKS.MAINNET]: "https://explorer.aptoslabs.com/account",
@@ -69,15 +69,15 @@ export const CASINO_MODULE_CONFIG = {
 
 // Token Configuration
 export const TOKEN_CONFIG = {
-  APT: {
-    name: "Aptos Coin",
-    symbol: "APT",
+  MOVE: {
+    name: "Movement Coin",
+    symbol: "MOVE",
     decimals: 8,
     type: "0x1::aptos_coin::AptosCoin"
   },
-  APTC: {
+  MOVE: {
     name: "APT Casino Token",
-    symbol: "APTC",
+    symbol: "MOVE",
     decimals: 8,
     type: "0x1::coin::CoinStore<0x1::aptos_coin::AptosCoin>"
   },
@@ -85,29 +85,29 @@ export const TOKEN_CONFIG = {
     name: "MOVE",
     symbol: "MOVE",
     decimals: 8,
-    type: "0x1::aptos_coin::AptosCoin" // Movement uses same coin type as Aptos
+    type: "0x1::aptos_coin::AptosCoin" // Movement uses same coin type as Movement
   }
 };
 
 // Network Information
 export const NETWORK_INFO = {
   [APTOS_NETWORKS.TESTNET]: {
-    name: "Aptos Testnet",
+    name: "Movement Testnet",
     chainId: 2,
-    nativeCurrency: TOKEN_CONFIG.APT,
+    nativeCurrency: TOKEN_CONFIG.MOVE,
     explorer: APTOS_EXPLORER_URLS[APTOS_NETWORKS.TESTNET],
     faucet: APTOS_FAUCET_URLS[APTOS_NETWORKS.TESTNET]
   },
   [APTOS_NETWORKS.MAINNET]: {
-    name: "Aptos Mainnet",
+    name: "Movement Mainnet",
     chainId: 1,
-    nativeCurrency: TOKEN_CONFIG.APT,
+    nativeCurrency: TOKEN_CONFIG.MOVE,
     explorer: APTOS_EXPLORER_URLS[APTOS_NETWORKS.MAINNET]
   },
   [APTOS_NETWORKS.DEVNET]: {
-    name: "Aptos Devnet",
+    name: "Movement Devnet",
     chainId: 0,
-    nativeCurrency: TOKEN_CONFIG.APT,
+    nativeCurrency: TOKEN_CONFIG.MOVE,
     explorer: APTOS_EXPLORER_URLS[APTOS_NETWORKS.DEVNET],
     faucet: APTOS_FAUCET_URLS[APTOS_NETWORKS.DEVNET]
   },

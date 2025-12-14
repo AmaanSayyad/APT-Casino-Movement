@@ -2,7 +2,7 @@
 setlocal enabledelayedexpansion
 
 REM APT Casino Deployment Script for Windows
-REM This script deploys the entire casino application to Aptos testnet/mainnet and Vercel
+REM This script deploys the entire casino application to Movement testnet/mainnet and Vercel
 
 REM Configuration
 set "SCRIPT_DIR=%~dp0"
@@ -153,10 +153,10 @@ if errorlevel 1 (
     exit /b 1
 )
 
-REM Check Aptos CLI
-aptos --version >nul 2>&1
+REM Check Movement CLI
+movement --version >nul 2>&1
 if errorlevel 1 (
-    echo [WARNING] Aptos CLI is not installed. Installing...
+    echo [WARNING] Movement CLI is not installed. Installing...
     curl -fsSL "https://aptoslabs.com/scripts/install_cli.py" | python3
 )
 
@@ -209,9 +209,9 @@ echo [STEP] Compiling Move contracts...
 cd /d "%PROJECT_ROOT%\move-contracts"
 
 if "%VERBOSE%"=="true" (
-    aptos move compile --verbose
+    movement move compile --verbose
 ) else (
-    aptos move compile >nul 2>&1
+    movement move compile >nul 2>&1
 )
 
 if errorlevel 1 (

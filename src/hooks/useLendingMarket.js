@@ -1,18 +1,18 @@
 "use client";
 import { useState, useEffect } from 'react';
 
-// Mock data for Aptos testnet lending market
+// Mock data for Movement testnet lending market
 const MOCK_LENDING_DATA = {
   userDeposits: [
     {
-      symbol: 'APT',
-      name: 'Aptos Coin',
+      symbol: 'MOVE',
+      name: 'Movement Coin',
       amount: '25.5',
       apy: '8.2',
       iconColor: '#F1324D'
     },
     {
-      symbol: 'APTC',
+      symbol: 'MOVE',
       name: 'APT Casino Token',
       amount: '500.0',
       apy: '12.5',
@@ -21,16 +21,16 @@ const MOCK_LENDING_DATA = {
   ],
   userBorrows: [
     {
-      symbol: 'APT',
-      name: 'Aptos Coin',
+      symbol: 'MOVE',
+      name: 'Movement Coin',
       amount: '5.0',
       apy: '15.2',
       iconColor: '#F1324D'
     }
   ],
   marketRates: {
-    APT: { apy: '8.2', ltv: '0.7' },
-    APTC: { apy: '12.5', ltv: '0.6' }
+    MOVE: { apy: '8.2', ltv: '0.7' },
+    MOVE: { apy: '12.5', ltv: '0.6' }
   }
 };
 
@@ -40,7 +40,7 @@ export const useLendingMarket = () => {
   const [marketRates, setMarketRates] = useState(MOCK_LENDING_DATA.marketRates);
   const [isLoading, setIsLoading] = useState(false);
 
-  // Mock functions for Aptos testnet
+  // Mock functions for Movement testnet
   const depositAsset = async (asset, amount) => {
     setIsLoading(true);
     try {

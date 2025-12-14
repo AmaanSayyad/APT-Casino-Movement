@@ -180,7 +180,7 @@ const WheelPayouts = () => {
             </Typography>
             <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 2 }}>
               <Chip 
-                label="100 APTC" 
+                label="100 MOVE" 
                 sx={{ 
                   bgcolor: 'rgba(0,0,0,0.3)', 
                   color: 'white',
@@ -200,7 +200,7 @@ const WheelPayouts = () => {
               />
               <FaEquals color="#FFA500" />
               <Chip 
-                label={`${parseFloat(getMaxMultiplier(riskLevels[activeTab].key)) * 100} APTC`}
+                label={`${parseFloat(getMaxMultiplier(riskLevels[activeTab].key)) * 100} MOVE`}
                 sx={{ 
                   bgcolor: 'rgba(20, 216, 84, 0.2)', 
                   color: '#14D854',
@@ -225,7 +225,7 @@ const WheelPayouts = () => {
               Maximum Payout
             </Typography>
             <Typography variant="body2" color="rgba(255,255,255,0.7)" sx={{ mb: 1 }}>
-              Maximum payout: 1,000,000 APTC per spin.
+              Maximum payout: 1,000,000 MOVE per spin.
             </Typography>
             <Typography variant="body2" color="rgba(255,255,255,0.5)" sx={{ fontSize: '0.8rem' }}>
               With {selectedSegments} segments, high risk offers up to {getMaxMultiplier('highRisk')} multiplier.
@@ -283,10 +283,10 @@ const WheelPayouts = () => {
             }}
           >
             <Typography variant="caption" color="rgba(255,255,255,0.6)">
-              0x multiplier = loss of bet (100 APTC)
+              0x multiplier = loss of bet (100 MOVE)
             </Typography>
             <Typography variant="caption" fontWeight="bold" color="#e74c3c">
-              -100 APTC
+              -100 MOVE
             </Typography>
           </Box>
           
@@ -314,7 +314,7 @@ const WheelPayouts = () => {
                     <Typography variant="subtitle2" color="rgba(255,255,255,0.7)">Multiplier</Typography>
                   </Box>
                   <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
-                    <Typography variant="subtitle1" fontWeight="bold" color="white">{example.bet} APTC</Typography>
+                    <Typography variant="subtitle1" fontWeight="bold" color="white">{example.bet} MOVE</Typography>
                     <Typography 
                       variant="subtitle1" 
                       fontWeight="bold" 
@@ -332,14 +332,14 @@ const WheelPayouts = () => {
                   </Box>
                   <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
                     <Typography variant="subtitle1" fontWeight="bold" color="#FFA500">
-                      {example.payout} APTC
+                      {example.payout} MOVE
                     </Typography>
                     <Typography 
                       variant="subtitle1" 
                       fontWeight="bold" 
                       color="#14D854"
                     >
-                      +{example.profit} APTC
+                      +{example.profit} MOVE
                     </Typography>
                   </Box>
                 </Box>

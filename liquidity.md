@@ -5,11 +5,11 @@
 ### What We Have Now (Test Phase)
 - **Artificial Balance Manager**: Local state management with Redux
 - **Simulated Winnings**: Frontend-only balance updates
-- **No Real Liquidity**: Users play with their own APT, but winnings are just numbers
+- **No Real Liquidity**: Users play with their own MOVE, but winnings are just numbers
 
 ### Problems with Current System
 - No actual casino treasury
-- Winnings are not real APT
+- Winnings are not real MOVE
 - No house edge implementation
 - No revenue generation mechanism
 - Users can't withdraw real winnings
@@ -225,7 +225,7 @@ public fun track_revenue(game_type: u8, amount: u64) {
 
 ### Phase 1: Treasury Foundation (Week 1-2)
 - [ ] Deploy treasury smart contract
-- [ ] Initialize with seed liquidity (e.g., 1000 APT)
+- [ ] Initialize with seed liquidity (e.g., 1000 MOVE)
 - [ ] Set up admin controls and multi-sig
 - [ ] Test basic treasury operations
 
@@ -233,7 +233,7 @@ public fun track_revenue(game_type: u8, amount: u64) {
 - [ ] Modify existing games to use treasury
 - [ ] Implement house edge collection
 - [ ] Update payout mechanisms
-- [ ] Test with real APT transactions
+- [ ] Test with real MOVE transactions
 
 ### Phase 3: Advanced Features (Week 5-6)
 - [ ] Dynamic pricing implementation
@@ -252,7 +252,7 @@ public fun track_revenue(game_type: u8, amount: u64) {
 ### 1. Dynamic House Edge
 - **Low Volume**: Increase edge to maintain profitability
 - **High Volume**: Decrease edge to attract more players
-- **Market Conditions**: Adjust based on APT price volatility
+- **Market Conditions**: Adjust based on MOVE price volatility
 
 ### 2. Liquidity Mining
 ```move
@@ -262,7 +262,7 @@ public entry fun stake_liquidity(
     amount: u64,
     lock_period: u64
 ) {
-    // Stake APT in treasury
+    // Stake MOVE in treasury
     // Earn rewards based on lock period
     // Share in house edge revenue
 }

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { Aptos, AptosConfig, Network } from '@aptos-labs/ts-sdk';
 
 const config = new AptosConfig({ network: Network.TESTNET });
-const aptos = new Aptos(config);
+const movement = new Aptos(config);
 
 export async function GET(request: NextRequest) {
   try {
@@ -14,7 +14,7 @@ export async function GET(request: NextRequest) {
 
     if (gameId) {
       // Get specific game
-      const gameData = await aptos.view({
+      const gameData = await movement.view({
         payload: {
           function: `${treasuryAddress}::game_logger::get_game`,
           functionArguments: [treasuryAddress, gameId],
@@ -27,7 +27,7 @@ export async function GET(request: NextRequest) {
       });
     } else {
       // Get game history
-      const historyData = await aptos.view({
+      const historyData = await movement.view({
         payload: {
           function: `${treasuryAddress}::game_logger::get_game_history`,
           functionArguments: [treasuryAddress],

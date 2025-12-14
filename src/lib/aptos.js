@@ -7,22 +7,22 @@ import {
   WalletAdapter 
 } from "@aptos-labs/wallet-adapter-core";
 
-// Aptos network configurations
+// Movement network configurations
 export const APTOS_NETWORKS = {
   mainnet: {
-    name: "Aptos Mainnet",
+    name: "Movement Mainnet",
     chainId: 1,
     url: "https://fullnode.mainnet.aptoslabs.com",
     faucetUrl: null
   },
   testnet: {
-    name: "Aptos Testnet", 
+    name: "Movement Testnet", 
     chainId: 2,
     url: "https://fullnode.testnet.aptoslabs.com",
     faucetUrl: "https://faucet.testnet.aptoslabs.com"
   },
   devnet: {
-    name: "Aptos Devnet",
+    name: "Movement Devnet",
     chainId: 0,
     url: "https://fullnode.devnet.aptoslabs.com", 
     faucetUrl: "https://faucet.devnet.aptoslabs.com"
@@ -32,7 +32,7 @@ export const APTOS_NETWORKS = {
 // Default network (can be changed via environment variable)
 export const DEFAULT_NETWORK = process.env.NEXT_PUBLIC_APTOS_NETWORK || 'testnet';
 
-// Aptos client instance (ts-sdk v3+)
+// Movement client instance (ts-sdk v3+)
 const NETWORK_ENUM_MAP = {
   mainnet: NetworkToNetworkName.MAINNET,
   testnet: NetworkToNetworkName.TESTNET,
@@ -46,7 +46,7 @@ const aptosConfig = new AptosConfig({
 export const aptosClient = new Aptos(aptosConfig);
 
 // Debug log to verify network
-console.log("Aptos client configured for network:", DEFAULT_NETWORK);
+console.log("Movement client configured for network:", DEFAULT_NETWORK);
 console.log("Network enum:", NETWORK_ENUM_MAP[DEFAULT_NETWORK]);
 
 // Module addresses for our casino contracts
@@ -56,7 +56,7 @@ export const CASINO_MODULE_ADDRESS = process.env.NEXT_PUBLIC_CASINO_MODULE_ADDRE
 // Treasury receive address (can be same as module or a separate EOA)
 export const TREASURY_ADDRESS = process.env.NEXT_PUBLIC_TREASURY_ADDRESS || CASINO_MODULE_ADDRESS;
 
-// Token module address (APT token)
+// Token module address (MOVE token)
 export const APT_TOKEN_MODULE = "0x1::coin::CoinStore<0x1::aptos_coin::AptosCoin>";
 
 // Casino game module names
@@ -82,12 +82,12 @@ export async function getAccountBalance(address) {
   }
 }
 
-// Helper function to format APT amount
+// Helper function to format MOVE amount
 export function formatAptAmount(amount) {
   return (parseInt(amount) / 100000000).toFixed(8);
 }
 
-// Helper function to parse APT amount
+// Helper function to parse MOVE amount
 export function parseAptAmount(amount) {
   return Math.floor(parseFloat(amount) * 100000000).toString();
 }
@@ -343,7 +343,7 @@ export const CasinoGames = {
 
 // User balance management system
 export const UserBalanceSystem = {
-  // Deposit APT to house account
+  // Deposit MOVE to house account
   deposit: (amountOctas) => {
     return createEntryFunctionPayload(
       CASINO_MODULE_ADDRESS,
@@ -354,7 +354,7 @@ export const UserBalanceSystem = {
     );
   },
 
-  // Withdraw APT from house account
+  // Withdraw MOVE from house account
   withdraw: (amountOctas) => {
     return createEntryFunctionPayload(
       CASINO_MODULE_ADDRESS,

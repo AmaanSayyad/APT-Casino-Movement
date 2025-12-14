@@ -1,8 +1,7 @@
 "use client";
 
 import React from 'react';
-import { FaExternalLinkAlt, FaSpinner } from 'react-icons/fa';
-import { SiMove } from 'react-icons/si';
+import { FaExternalLinkAlt, FaSpinner, FaArrowUpRightFromSquare } from 'react-icons/fa6';
 import { openMovementExplorer } from '@/lib/movement';
 
 /**
@@ -51,16 +50,10 @@ const MovementTxLink = ({
         className={`flex items-center justify-center hover:scale-110 transition-transform duration-200 ${className}`}
         title={`View transaction on Movement Explorer: ${transactionHash}`}
       >
-        <div className="relative group">
-          <SiMove 
-            className="text-purple-400 hover:text-purple-300 cursor-pointer" 
-            size={14}
-          />
-          <FaExternalLinkAlt 
-            className="absolute -top-1 -right-1 text-purple-400 group-hover:text-purple-300" 
-            size={8}
-          />
-        </div>
+        <FaArrowUpRightFromSquare 
+          className="text-purple-400 hover:text-purple-300 cursor-pointer" 
+          size={16}
+        />
       </button>
     );
   }
@@ -68,7 +61,7 @@ const MovementTxLink = ({
   // Show disabled icon when transaction hash is unavailable
   return (
     <div className={`flex items-center justify-center ${className}`}>
-      <SiMove 
+      <FaArrowUpRightFromSquare 
         className="text-gray-500 opacity-50" 
         size={14}
         title="Movement transaction unavailable"

@@ -1,16 +1,16 @@
 "use client";
 import { useState, useEffect } from 'react';
 
-// Mock data for Aptos testnet
+// Mock data for Movement testnet
 const MOCK_BALANCES = {
   native: {
-    symbol: 'APT',
+    symbol: 'MOVE',
     formatted: '25.1234',
     value: '251234000000',
     decimals: 8
   },
   aptc: {
-    symbol: 'APTC',
+    symbol: 'MOVE',
     formatted: '500.00',
     value: '500000000000000000000000',
     decimals: 18

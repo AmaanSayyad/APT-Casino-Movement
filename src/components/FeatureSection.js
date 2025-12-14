@@ -11,13 +11,13 @@ export default function FeatureSection() {
     {
       id: 1,
       title: "100% Transparent & Provably Fair",
-      description: "All games use aptos verifiable on-chain randomness through our VRF module, ensuring complete transparency and fairness in every outcome.",
+      description: "All games use movement verifiable on-chain randomness through our VRF module, ensuring complete transparency and fairness in every outcome.",
       icon: "🎲"
     },
     {
       id: 2,
       title: "Cross-Chain Liquidity",
-      description: "Stake tokens across multiple chains to earn APTC tokens while playing your favorite games with minimal slippage.",
+      description: "Stake tokens across multiple chains to earn MOVE tokens while playing your favorite games with minimal slippage.",
       icon: "⛓️"
     },
     {
@@ -126,7 +126,7 @@ export default function FeatureSection() {
               </div>
               
               <p className="text-white/80 text-sm">
-                APT-Casino leverages Aptos Blockchain to provide a transparent, provably fair gaming
+                APT-Casino leverages Movement Blockchain to provide a transparent, provably fair gaming
                 experience with DeFi integration, allowing players to earn passive income through staking.
               </p>
             </div>
