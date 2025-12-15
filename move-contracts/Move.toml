@@ -4,7 +4,15 @@ version = "1.0.0"
 upgrade_policy = "compatible"
 
 [dependencies]
-AptosFramework = { git = "https://github.com/aptos-labs/movement-core.git", subdir = "movement-move/framework/movement-framework/", rev = "movement-node-v1.8.0" }
+AptosFramework = { git = "https://github.com/aptos-labs/aptos-core.git", subdir = "aptos-move/framework/aptos-framework/", rev = "aptos-node-v1.8.0" }
 
 [addresses]
 movement_casino = "_"
+
+# Game contract modules
+# - common: Shared interfaces and error codes for all game contracts
+# - game_logger: Existing game logging contract (preserved)
+# - mines_game: Mines game contract with mine placement and revelation logic
+# - wheel_game: Wheel game contract with spin and color determination logic
+# - plinko_game: Plinko game contract with ball physics simulation
+# - roulette_game: Roulette game contract with number generation and bet evaluation
