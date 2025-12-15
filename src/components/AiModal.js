@@ -10,6 +10,12 @@ export default function AiModal() {
   // const { closeModal, isModalOpen } = useModal();
   const isModalOpen = false;
   const closeModal = false;
+  const joinedDate = new Date().toLocaleDateString(undefined, {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+  });
+
   return (
     <div
       className={`top-0 duration-100 text-white fixed flex justify-center items-center z-40 w-full h-full backdrop-blur-sm  ${
@@ -41,7 +47,7 @@ export default function AiModal() {
             </div>
             <div className="flex flex-col items-end">
               <span>Joined Date:</span>
-              <span className="text-2xl leading-7">24th May,2024</span>
+              <span className="text-2xl leading-7">{joinedDate}</span>
             </div>
           </div>
           <div className="buttons flex w-full gap-3 ">

@@ -26,7 +26,7 @@ export default function LetsPlaySection() {
   }, []);
 
   return (
-    <section id="letsplay" className="relative py-24 md:py-32 px-4 sm:px-8 md:px-16 lg:px-24 xl:px-36 bg-hotline overflow-hidden">
+    <section id="letsplay" className="relative py-24 md:py-32 px-4 sm:px-8 md:px-16 lg:px-24 xl:px-36 bg-[#070005] overflow-hidden">
       {/* Animated background patterns */}
       <div className="absolute inset-0 opacity-10">
         <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-red-magic/30 to-blue-magic/30"></div>
