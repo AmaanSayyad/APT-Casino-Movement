@@ -9,6 +9,7 @@ import { useRouter } from "next/navigation";
 import { useSelector, useDispatch } from 'react-redux';
 import { setBalance, setLoading, loadBalanceFromStorage, addToBalance, subtractFromBalance } from '@/store/balanceSlice';
 import MovementWalletButton from "./MovementWalletButton";
+import PrivyWalletButton from "./PrivyWalletButton";
 import WithdrawModal from "./WithdrawModal";
 import NavbarBalance from "./NavbarBalance";
 import dynamic from 'next/dynamic';
@@ -787,7 +788,10 @@ export default function Navbar() {
           
 
           
-          {/* Movement Wallet Button */}
+          {/* Privy Quick Login (Email/Social) */}
+          <PrivyWalletButton />
+          
+          {/* Movement Wallet Button (Browser Extension) */}
           <MovementWalletButton />
   
         </div>

@@ -1,0 +1,146 @@
+/**
+ * Privy Wallet Hook
+ * 
+ * Hook for managing Privy embedded wallet connections.
+ * Works alongside existing Movement wallet adapters.
+ */
+
+import { useMemo, useCallback } from 'react';
+import { usePrivy, useWallets } from '@privy-io/react-auth';
+import { MOVEMENT_BARDOCK, type MovementConfig } from '@/config/movement';
+
+export interface UsePrivyWallet {
+  // Connection state
+  isConnected: boolean;
+  isAuthenticated: boolean;
+  isReady: boolean;
+  
+  // Address info
+  address: string | null;
+  shortAddress: string | null;
+  
+  // User info
+  user: any | null;
+  email: string | null;
+  
+  // Wallet info
+  embeddedWallet: any | null;
+  allWallets: any[];
+  
+  // Network
+  network: MovementConfig;
+  
+  // Actions
+  login: () => Promise<void>;
+  logout: () => Promise<void>;
+  signMessage: (message: string) => Promise<string | undefined>;
+  exportWallet: () => Promise<void>;
+  
+  // Loading states
+  isLoading: boolean;
+}
+
+/**
+ * Hook for managing Privy embedded wallet
+ */
+export function usePrivyWallet(): UsePrivyWallet {
+  const { 
+    ready,
+    authenticated,
+    user,
+    login: privyLogin,
+    logout: privyLogout,
+    signMessage: privySignMessage,
+    exportWallet: privyExportWallet,
+  } = usePrivy();
+  
+  const { wallets } = useWallets();
+
+  // Find the embedded (Privy) wallet
+  const embeddedWallet = useMemo(() => {
+    return wallets.find(wallet => wallet.walletClientType === 'privy') || null;
+  }, [wallets]);
+
+  // Get address from embedded wallet
+  const address = embeddedWallet?.address || null;
+
+  // Create shortened address
+  const shortAddress = useMemo(() => {
+    if (!address || typeof address !== 'string') return null;
+    if (address.length < 10) return address;
+    
+    const cleanAddress = address.startsWith('0x') ? address.slice(2) : address;
+    if (cleanAddress.length < 8) return address;
+    
+    const first4 = cleanAddress.slice(0, 4);
+    const last4 = cleanAddress.slice(-4);
+    return `0x${first4}...${last4}`;
+  }, [address]);
+
+  // Get user email if available
+  const email = useMemo(() => {
+    if (!user) return null;
+    return user.email?.address || null;
+  }, [user]);
+
+  // Login handler
+  const login = useCallback(async () => {
+    try {
+      await privyLogin();
+    } catch (error) {
+      console.error('❌ Privy login failed:', error);
+      throw error;
+    }
+  }, [privyLogin]);
+
+  // Logout handler
+  const logout = useCallback(async () => {
+    try {
+      await privyLogout();
+    } catch (error) {
+      console.error('❌ Privy logout failed:', error);
+      throw error;
+    }
+  }, [privyLogout]);
+
+  // Sign message handler
+  const signMessage = useCallback(async (message: string) => {
+    try {
+      const signature = await privySignMessage(message);
+      return signature;
+    } catch (error) {
+      console.error('❌ Privy sign message failed:', error);
+      throw error;
+    }
+  }, [privySignMessage]);
+
+  // Export wallet handler
+  const exportWallet = useCallback(async () => {
+    try {
+      await privyExportWallet();
+    } catch (error) {
+      console.error('❌ Privy export wallet failed:', error);
+      throw error;
+    }
+  }, [privyExportWallet]);
+
+  return {
+    isConnected: authenticated && !!embeddedWallet,
+    isAuthenticated: authenticated,
+    isReady: ready,
+    address,
+    shortAddress,
+    user,
+    email,
+    embeddedWallet,
+    allWallets: wallets,
+    network: MOVEMENT_BARDOCK,
+    login,
+    logout,
+    signMessage,
+    exportWallet,
+    isLoading: !ready,
+  };
+}
+
+export default usePrivyWallet;

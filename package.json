@@ -28,6 +28,7 @@
     "@mui/icons-material": "^5.15.18",
     "@mui/lab": "^5.0.0-alpha.170",
     "@mui/material": "^5.15.18",
+    "@privy-io/react-auth": "^3.9.0",
     "@react-three/drei": "^9.88.0",
     "@react-three/fiber": "^8.14.5",
     "@reduxjs/toolkit": "^1.9.7",
@@ -37,6 +38,7 @@
     "@types/three": "^0.176.0",
     "@visx/responsive": "^3.10.2",
     "@wallet-standard/core": "^1.1.1",
+    "aptos": "^1.22.1",
     "autoprefixer": "10.4.19",
     "clsx": "^2.1.1",
     "currency.js": "^2.0.4",
@@ -62,7 +64,8 @@
     "styled-components": "^6.1.8",
     "tailwind-merge": "^3.3.1",
     "tailwindcss": "3.4.3",
-    "three": "^0.176.0"
+    "three": "^0.176.0",
+    "viem": "^2.42.1"
   },
   "devDependencies": {
     "@types/node": "22.15.15",

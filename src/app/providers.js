@@ -8,6 +8,8 @@ import { WalletStatusProvider } from '@/hooks/useWalletStatus';
 import { NotificationProvider } from '@/components/NotificationSystem';
 import { ThemeProvider } from 'next-themes';
 import { MovementWalletProvider } from '@/components/MovementWalletProvider';
+import { PrivyWalletProvider } from '@/components/PrivyWalletProvider';
+
 const queryClient = new QueryClient();
 
 export default function Providers({ children }) {
@@ -25,9 +27,11 @@ export default function Providers({ children }) {
         <NotificationProvider>
           <WalletStatusProvider>
             <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
-              <MovementWalletProvider>
-                {children}
-              </MovementWalletProvider>
+              <PrivyWalletProvider>
+                <MovementWalletProvider>
+                  {children}
+                </MovementWalletProvider>
+              </PrivyWalletProvider>
             </ThemeProvider>
           </WalletStatusProvider>
         </NotificationProvider>

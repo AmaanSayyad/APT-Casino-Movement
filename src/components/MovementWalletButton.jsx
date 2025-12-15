@@ -1,6 +1,7 @@
 "use client";
 import React, { useState } from 'react';
 import { useMovementWallet } from '@/hooks/useMovementWallet';
+import { usePrivyWallet } from '@/hooks/usePrivyWallet';
 
 export default function MovementWalletButton() {
   const { 
@@ -9,21 +10,18 @@ export default function MovementWalletButton() {
     connect, 
     disconnect, 
     isLoading, 
-    error,
     walletName,
     availableWallets
   } = useMovementWallet();
+  
+  const privyWallet = usePrivyWallet();
 
   const [showWalletOptions, setShowWalletOptions] = useState(false);
 
-  // Debug logging
-  console.log('🔘 MovementWalletButton State:', {
-    isConnected,
-    shortAddress,
-    walletName,
-    availableWallets: availableWallets.length,
-    isLoading
-  });
+  // Hide if Privy wallet is connected (and Movement is not)
+  if (privyWallet.isConnected && !isConnected) {
+    return null;
+  }
 
   const handleConnect = async (selectedWallet) => {
     try {
@@ -77,7 +75,7 @@ export default function MovementWalletButton() {
   }
 
   return (
-    <div className="flex flex-col items-end relative">
+    <div className="relative">
       {availableWallets.length > 1 ? (
         <>
           <button
@@ -132,24 +130,6 @@ export default function MovementWalletButton() {
             'Connect Wallet'
           )}
         </button>
-      )}
-      
-      {error && (
-        <div className="text-xs text-red-400 mt-1 max-w-48 text-right">
-          {error}
-        </div>
-      )}
-      
-      {!isConnected && !error && availableWallets.length === 0 && (
-        <div className="text-xs text-red-400 mt-1 max-w-48 text-right">
-          No Movement wallets found. Install OKX, Razor, or Nightly.
-        </div>
-      )}
-      
-      {!isConnected && !error && availableWallets.length > 0 && (
-        <div className="text-xs text-gray-400 mt-1 max-w-48 text-right">
-          {availableWallets.length} wallet{availableWallets.length > 1 ? 's' : ''} available
-        </div>
       )}
     </div>
   );
