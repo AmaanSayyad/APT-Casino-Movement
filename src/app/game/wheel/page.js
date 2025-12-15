@@ -15,7 +15,7 @@ import { useSelector, useDispatch } from 'react-redux';
 import { setBalance, setLoading, loadBalanceFromStorage } from '@/store/balanceSlice';
 import { useNotification } from '@/components/NotificationSystem';
 import { useMovementGameLogger } from '@/hooks/useMovementGameLogger';
-import { useWallet } from '@aptos-labs/wallet-adapter-react';
+import { useMovementWallet } from '@/hooks/useMovementWallet';
 
 // Import new components
 import WheelVideo from "./components/WheelVideo";
@@ -48,7 +48,7 @@ export default function Home() {
   const { userBalance, isLoading: isLoadingBalance } = useSelector((state) => state.balance);
   const notification = useNotification();
   const { logGame: logMovementGame } = useMovementGameLogger();
-  const { account } = useWallet();
+  const { isConnected, address } = useMovementWallet();
   
   // Use ref to prevent infinite loop in useEffect
   const isInitialized = useRef(false);
@@ -82,8 +82,8 @@ export default function Home() {
   const manulBet = async () => {
     if (betAmount <= 0 || isSpinning) return;
 
-     // Check if wallet is connected first
-     if (!window.movement || !window.movement.account) {
+    // Check if Movement wallet is connected first (use React state instead of window.movement)
+    if (!isConnected || !address) {
       alert('Please connect your Movement wallet first');
       return;
     }

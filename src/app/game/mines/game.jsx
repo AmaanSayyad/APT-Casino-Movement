@@ -35,7 +35,13 @@ const SOUNDS = {
   bet: "/sounds/bet.mp3",
 };
 
-const Game = ({ betSettings = {}, onGameStatusChange, onGameComplete }) => {
+const Game = ({ 
+  betSettings = {}, 
+  onGameStatusChange, 
+  onGameComplete,
+  movementConnected = false,
+  movementAddress = null,
+}) => {
   // Redux integration
   const dispatch = useDispatch();
   const { userBalance } = useSelector((state) => state.balance);
@@ -304,8 +310,8 @@ const Game = ({ betSettings = {}, onGameStatusChange, onGameComplete }) => {
       
       // Place bet using Redux balance
       const startGameWithBet = async () => {
-        // Check if wallet is connected first
-        if (!window.movement || !window.movement.account) {
+        // Check if Movement wallet is connected first (via React state, not global window)
+        if (!movementConnected || !movementAddress) {
           toast.error('Please connect your Movement wallet first');
           return;
         }

@@ -469,7 +469,13 @@ export default function Mines() {
           transition={{ duration: 0.3 }}
           className="relative z-10"
         >
-          <Game betSettings={betSettings} onGameStatusChange={setGameStatus} onGameComplete={handleGameComplete} />
+          <Game 
+            betSettings={betSettings} 
+            onGameStatusChange={setGameStatus} 
+            onGameComplete={handleGameComplete}
+            movementConnected={isConnected}
+            movementAddress={address}
+          />
         </motion.div>
       </motion.div>
     </div>
