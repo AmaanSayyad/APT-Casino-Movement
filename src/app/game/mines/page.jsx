@@ -21,6 +21,7 @@ import useWalletStatus from '@/hooks/useWalletStatus';
 import AptosConnectWalletButton from '@/components/AptosConnectWalletButton';
 import { useMovementGameLogger } from '@/hooks/useMovementGameLogger';
 import { useWallet } from '@aptos-labs/wallet-adapter-react';
+import { useMovementWallet } from '@/hooks/useMovementWallet';
 import Image from "next/image";
 import "./mines.css";
 import GameDetail from "@/components/GameDetail";
@@ -39,7 +40,6 @@ export default function Mines() {
   
   // Game logging hooks
   const { logGame: logMovementGame } = useMovementGameLogger();
-  const { account } = useWallet();
   
   // AI Auto Betting State
   const [isAIActive, setIsAIActive] = useState(false);
@@ -65,8 +65,11 @@ export default function Mines() {
     }
   });
   
-  // Wallet connection
-  const { isConnected, address } = useWalletStatus();
+  // Movement wallet connection
+  const { isConnected, address } = useMovementWallet();
+  
+  // Aptos wallet (for backward compatibility)
+  const { account, connected } = useWallet();
   
   // Theme
   const { theme } = useTheme();
@@ -473,8 +476,8 @@ export default function Mines() {
             betSettings={betSettings} 
             onGameStatusChange={setGameStatus} 
             onGameComplete={handleGameComplete}
-            movementConnected={isConnected}
-            movementAddress={address}
+            movementConnected={isConnected || connected}
+            movementAddress={address || account?.address}
           />
         </motion.div>
       </motion.div>

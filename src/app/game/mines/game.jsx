@@ -310,9 +310,9 @@ const Game = ({
       
       // Place bet using Redux balance
       const startGameWithBet = async () => {
-        // Check if Movement wallet is connected first (via React state, not global window)
+        // Check if wallet is connected (Movement or Aptos compatible)
         if (!movementConnected || !movementAddress) {
-          toast.error('Please connect your Movement wallet first');
+          toast.error('Please connect your wallet first');
           return;
         }
         

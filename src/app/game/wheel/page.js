@@ -163,7 +163,7 @@ export default function Home() {
           setGameHistory(prev => [newHistoryItem, ...prev]);
           
           // Log game to Movement blockchain
-          if (account?.address) {
+          if (address) {
             console.log('🎯 Logging Wheel game to Movement blockchain...');
             
             // Update history to show pending status
@@ -180,7 +180,7 @@ export default function Home() {
             
             logMovementGame({
               gameType: 'wheel',
-              playerAddress: account.address,
+              playerAddress: address,
               betAmount: betAmountOctas,
               result: gameResult,
               payout: payoutOctas,
@@ -443,7 +443,7 @@ export default function Home() {
         try {
           const res = await logMovementGame({
             gameType: 'wheel',
-            playerAddress: account.address,
+            playerAddress: address,
             betAmount: betAmountOctas,
             result: gameResult,
             payout: payoutOctas,
