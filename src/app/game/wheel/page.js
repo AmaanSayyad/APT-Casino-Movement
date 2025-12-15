@@ -499,10 +499,10 @@ export default function Home() {
       }
 
       // Clamp bet to balance
-      currentBalance = parseFloat(userBalance || '0');
-      if (currentBet > currentBalance) {
-        console.log(`💰 Bet amount ${currentBet.toFixed(5)} exceeds balance ${currentBalance.toFixed(5)}, clamping to balance`);
-        currentBet = currentBalance;
+      let updatedBalance = parseFloat(userBalance || '0');
+      if (currentBet > updatedBalance) {
+        console.log(`💰 Bet amount ${currentBet.toFixed(5)} exceeds balance ${updatedBalance.toFixed(5)}, clamping to balance`);
+        currentBet = updatedBalance;
       }
       if (currentBet <= 0) currentBet = initialBetAmount;
 

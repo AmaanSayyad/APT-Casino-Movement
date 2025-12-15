@@ -156,7 +156,29 @@ export function openMovementExplorer(
   }
 }
 
+// Re-export Movement contract helpers so consumers can import from "@/lib/movement"
+import { 
+  CASINO_MODULE_ADDRESS, 
+  TREASURY_ADDRESS, 
+  aptosClient, 
+  UserBalanceSystem, 
+  CasinoGames 
+} from './aptos';
+
+export {
+  CASINO_MODULE_ADDRESS,
+  TREASURY_ADDRESS,
+  aptosClient,
+  UserBalanceSystem,
+  CasinoGames
+};
+
 export default {
+  CASINO_MODULE_ADDRESS,
+  TREASURY_ADDRESS,
+  aptosClient,
+  UserBalanceSystem,
+  CasinoGames,
   shortenAddress,
   isValidAddress,
   normalizeAddress,
