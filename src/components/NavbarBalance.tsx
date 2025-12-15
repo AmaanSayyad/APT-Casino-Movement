@@ -28,11 +28,9 @@ export function NavbarBalance({
   const formattedBalance = balance || "0";
 
   if (!isConnected) {
-    return (
-      <div className="flex items-center">
-        <span className="text-white/70 text-sm">Connect Wallet</span>
-      </div>
-    );
+    // When wallet is not connected, don't show extra text in the navbar.
+    // The dedicated wallet buttons handle connection UX.
+    return null;
   }
 
   return (
