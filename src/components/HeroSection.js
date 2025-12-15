@@ -13,7 +13,8 @@ export default function HeroSection() {
   return (
     <section
       id="hero"
-      className="min-h-screen flex flex-col pt-24 sm:pt-28 md:pt-28 lg:pt-32 relative w-full px-4 sm:px-10 md:px-20 lg:px-36"
+      className="min-h-screen flex flex-col pt-24 sm:pt-28 md:pt-28 lg:pt-32 relative w-full px-4 sm:px-10 md:px-20 lg:px-36 bg-transparent"
+      style={{ backgroundImage: 'none' }}
     >
       {showAnnouncement && (
         <div className="w-full max-w-2xl mx-auto bg-gradient-to-r from-red-magic/10 to-blue-magic/10 backdrop-blur-sm p-3 rounded-lg border border-purple-500/20 flex justify-center items-center mb-8 mt-8 sm:mt-6">
@@ -76,7 +77,7 @@ export default function HeroSection() {
           <div className="text-center hidden md:block">
             <p className="text-gray-400 text-sm">Active Games</p>
             <p className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-red-magic to-blue-magic">
-              {isDev ? '3' : '14'}
+              {isDev ? '4' : '14'}
             </p>
           </div>
         </div>

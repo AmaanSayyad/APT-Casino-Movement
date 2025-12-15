@@ -4,44 +4,52 @@ import Link from 'next/link';
 import Image from 'next/image';
 
 const NewsUpdates = () => {
-  const newsItems = [
+  // Generate fresh dates so items never look stale
+  const today = new Date();
+  const newsItemsBase = [
     {
       id: 1,
       title: 'New Token Bridge Partnership with Movement',
       excerpt: 'APT Casino partners with Movement Network to provide seamless cross-chain token transfers with lower fees.',
-      date: '2025-05-08',
       category: 'Partnership',
       image: '/images/news/partnership.png',
-      url: '/news/token-bridge-partnership'
+      url: '/news/token-bridge-partnership',
+      daysAgo: 1,
     },
     {
       id: 2,
       title: 'MOVE Governance Proposal: Community Jackpots',
       excerpt: 'Vote on the new proposal to allocate 5% of platform fees to community-controlled jackpot pools.',
-      date: '2025-05-04',
       category: 'Governance',
       image: '/images/news/governance.png',
-      url: '/news/community-jackpots'
+      url: '/news/community-jackpots',
+      daysAgo: 3,
     },
     {
       id: 3,
       title: 'New Games Added: Crash and Plinko',
       excerpt: 'Two new provably fair games have been added to our collection with exclusive launch bonuses.',
-      date: '2025-05-03',
       category: 'Platform',
       image: '/images/news/new-games.png',
-      url: '/news/new-games-crash-plinko'
+      url: '/news/new-games-crash-plinko',
+      daysAgo: 5,
     },
     {
       id: 4,
       title: 'Security Audit Completed by Certik',
       excerpt: 'APT Casino\'s smart contracts have passed rigorous security auditing by Certik with high scores.',
-      date: '2025-05-02',
       category: 'Security',
       image: '/images/news/security.png',
-      url: '/news/certik-audit'
+      url: '/news/certik-audit',
+      daysAgo: 7,
     }
   ];
+
+  const newsItems = newsItemsBase.map(item => {
+    const date = new Date(today);
+    date.setDate(today.getDate() - item.daysAgo);
+    return { ...item, date: date.toISOString() };
+  });
   
   const [activeCategory, setActiveCategory] = useState('All');
   
