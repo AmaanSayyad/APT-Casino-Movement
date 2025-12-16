@@ -36,6 +36,8 @@ export function useUnifiedWallet(): UseUnifiedWallet {
   const movementWallet = useMovementWallet();
 
   const activeWallet = useMemo((): WalletType => {
+    // If both are connected, prefer Movement for transactions
+    if (movementWallet.isConnected && privyWallet.isConnected) return 'movement';
     // Movement wallet takes priority if connected
     if (movementWallet.isConnected) return 'movement';
     // Then check Privy

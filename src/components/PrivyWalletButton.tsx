@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from 'react';
+import { usePrivy } from '@privy-io/react-auth';
 import { usePrivyWallet } from '@/hooks/usePrivyWallet';
 import { useMovementWallet } from '@/hooks/useMovementWallet';
 
@@ -22,7 +23,10 @@ export default function PrivyWalletButton() {
     logout,
     exportWallet,
     isLoading,
+    embeddedWallet,
   } = usePrivyWallet();
+  
+  const { createWallet } = usePrivy();
   
   const movementWallet = useMovementWallet();
 
@@ -46,6 +50,28 @@ export default function PrivyWalletButton() {
     );
   }
 
+  // Authenticated but no embedded wallet - show create wallet button
+  if (isAuthenticated && !isConnected && !embeddedWallet) {
+    return (
+      <button
+        onClick={async () => {
+          try {
+            console.log('🔧 Creating embedded wallet...');
+            await createWallet();
+          } catch (error) {
+            console.error('Failed to create wallet:', error);
+          }
+        }}
+        className="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white px-4 py-2 rounded-lg font-medium transition-all flex items-center gap-2"
+      >
+        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+        </svg>
+        Create Wallet
+      </button>
+    );
+  }
+
   // Connected state
   if (isAuthenticated && isConnected) {
     return (
@@ -60,6 +86,7 @@ export default function PrivyWalletButton() {
             {email && (
               <span className="text-xs text-purple-300/70">{email}</span>
             )}
+            <span className="text-xs text-orange-300/70">Switch to Movement Testnet</span>
           </div>
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
@@ -74,6 +101,20 @@ export default function PrivyWalletButton() {
             </div>
             
             <div className="p-2">
+              <button
+                onClick={() => {
+                  // Guide user to switch network manually
+                  alert('To use MOVE tokens:\n\n1. Open your wallet settings\n2. Add Movement Testnet:\n   - Chain ID: 250\n   - RPC: https://testnet.movementnetwork.xyz/v1\n3. Switch to Movement Testnet');
+                  setShowMenu(false);
+                }}
+                className="w-full text-left px-3 py-2 text-sm text-orange-400 hover:bg-orange-500/20 rounded-md transition-colors flex items-center gap-2"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+                </svg>
+                Switch to Movement Testnet
+              </button>
+              
               <button
                 onClick={() => {
                   exportWallet();
@@ -113,7 +154,13 @@ export default function PrivyWalletButton() {
   // Not connected - show login button
   return (
     <button
-      onClick={login}
+      onClick={async () => {
+        try {
+          await login();
+        } catch (error) {
+          console.error('Login error:', error);
+        }
+      }}
       disabled={isLoading}
       className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 disabled:from-gray-600 disabled:to-gray-700 disabled:cursor-not-allowed text-white px-4 py-2 rounded-lg font-medium transition-all flex items-center gap-2 shadow-lg shadow-purple-500/20"
     >

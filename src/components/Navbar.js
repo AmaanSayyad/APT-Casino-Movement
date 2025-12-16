@@ -12,6 +12,7 @@ import MovementWalletButton from "./MovementWalletButton";
 import PrivyWalletButton from "./PrivyWalletButton";
 import WithdrawModal from "./WithdrawModal";
 import NavbarBalance from "./NavbarBalance";
+import { useUnifiedWallet } from "@/hooks/useUnifiedWallet";
 import dynamic from 'next/dynamic';
 const LiveChat = dynamic(() => import('./LiveChat'), { ssr: false });
 
@@ -72,15 +73,16 @@ export default function Navbar() {
   const [isDepositing, setIsDepositing] = useState(false);
   const [chatOpen, setChatOpen] = useState(true);
 
-  // Movement wallet connection
-  const movementWallet = useMovementWallet();
+  // Unified wallet connection (Privy + Movement)
+  const unifiedWallet = useUnifiedWallet();
+  const movementWallet = useMovementWallet(); // Keep for Movement-specific operations
   const movementBalance = useMovementBalance();
   const movementTransactions = useMovementTransactions();
   
   // Legacy variables for compatibility (can be removed later)
-  const isConnected = movementWallet.isConnected;
-  const address = movementWallet.address;
-  const isWalletReady = movementWallet.isConnected;
+  const isConnected = unifiedWallet.isConnected;
+  const address = unifiedWallet.address;
+  const isWalletReady = unifiedWallet.isConnected;
 
   // Movement hooks already defined above
 
@@ -217,8 +219,19 @@ export default function Navbar() {
 
   // Handle withdraw from navbar button - calls our withdraw API
   const handleWithdrawFromNavbar = async (amount) => {
-    if (!movementWallet.isConnected || !movementWallet.address) {
-      notification.error('Please connect your Movement wallet first');
+    if (!unifiedWallet.isConnected || !unifiedWallet.address) {
+      notification.error('Please connect your wallet first');
+      return;
+    }
+
+    // Check if Movement wallet is available for transactions
+    if (!movementWallet.isConnected) {
+      notification.error('To withdraw MOVE tokens, please connect your Movement wallet using the "Connect Wallet" button');
+      return;
+    }
+    
+    if (!movementWallet.isCorrectNetwork) {
+      notification.error('Please switch to Movement Bardock Testnet in your Movement wallet');
       return;
     }
 
@@ -333,8 +346,19 @@ export default function Navbar() {
 
   // Handle deposit using Movement transactions
   const handleDeposit = async () => {
-    if (!movementWallet.isConnected || !movementWallet.address) {
-      notification.error('Please connect your Movement wallet first');
+    if (!unifiedWallet.isConnected || !unifiedWallet.address) {
+      notification.error('Please connect your wallet first');
+      return;
+    }
+
+    // Check if Movement wallet is available for transactions
+    if (!movementWallet.isConnected) {
+      notification.error('To deposit MOVE tokens, please connect your Movement wallet using the "Connect Wallet" button');
+      return;
+    }
+    
+    if (!movementWallet.isCorrectNetwork) {
+      notification.error('Please switch to Movement Bardock Testnet in your Movement wallet');
       return;
     }
 
@@ -780,7 +804,7 @@ export default function Navbar() {
           {/* House Balance Display */}
           <NavbarBalance
             balance={userBalance}
-            isConnected={movementWallet.isConnected && movementWallet.isCorrectNetwork}
+            isConnected={unifiedWallet.isConnected}
             isLoading={isLoadingBalance}
             onDeposit={() => setShowBalanceModal(true)}
             onWithdraw={handleWithdrawFromNavbar}
@@ -936,7 +960,7 @@ export default function Navbar() {
                 />
                 <button
                   onClick={handleDeposit}
-                  disabled={!isConnected || !depositAmount || parseFloat(depositAmount) <= 0 || isDepositing}
+                  disabled={!unifiedWallet.isConnected || !depositAmount || parseFloat(depositAmount) <= 0 || isDepositing}
                   className="px-4 py-2 bg-gradient-to-r from-purple-500 to-blue-600 hover:from-purple-600 hover:to-blue-700 disabled:from-gray-600 disabled:to-gray-700 disabled:cursor-not-allowed text-white rounded font-medium transition-colors flex items-center gap-2"
                 >
                   {isDepositing ? (
@@ -985,16 +1009,16 @@ export default function Navbar() {
                     <div className="animate-spin w-4 h-4 border-2 border-white/20 border-t-white rounded-full"></div>
                     Processing...
                   </>
-                ) : movementWallet.isConnected ? (
+                ) : unifiedWallet.isConnected ? (
                   (userBalance && parseFloat(userBalance) > 0) ? 'Withdraw MOVE' : 'No House Balance'
                 ) : 'Connect Wallet'}
-                {movementWallet.isConnected && userBalance && parseFloat(userBalance) > 0 && !isWithdrawing && (
+                {unifiedWallet.isConnected && userBalance && parseFloat(userBalance) > 0 && !isWithdrawing && (
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
                   </svg>
                 )}
               </button>
-              {movementWallet.isConnected && userBalance && parseFloat(userBalance) > 0 && (
+              {unifiedWallet.isConnected && userBalance && parseFloat(userBalance) > 0 && (
                 <p className="text-xs text-gray-400 mt-1 text-center">
                   Withdraw {userBalance} MOVE from your house balance
                 </p>

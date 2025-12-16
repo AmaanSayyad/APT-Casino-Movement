@@ -5,7 +5,7 @@
  * Works alongside existing Movement wallet adapters.
  */
 
-import { useMemo, useCallback } from 'react';
+import { useMemo, useCallback, useEffect } from 'react';
 import { usePrivy, useWallets } from '@privy-io/react-auth';
 import { MOVEMENT_BARDOCK, type MovementConfig } from '@/config/movement';
 
@@ -52,9 +52,21 @@ export function usePrivyWallet(): UsePrivyWallet {
     logout: privyLogout,
     signMessage: privySignMessage,
     exportWallet: privyExportWallet,
+    createWallet,
   } = usePrivy();
   
   const { wallets } = useWallets();
+
+  // Auto-create embedded wallet if authenticated but no embedded wallet exists
+  useEffect(() => {
+    const hasEmbeddedWallet = wallets.some(wallet => wallet.walletClientType === 'privy');
+    if (authenticated && ready && !hasEmbeddedWallet) {
+      console.log('🔧 Creating embedded wallet for authenticated user...');
+      createWallet().catch(error => {
+        console.error('❌ Failed to create embedded wallet:', error);
+      });
+    }
+  }, [authenticated, ready, wallets, createWallet]);
 
   // Find the embedded (Privy) wallet
   const embeddedWallet = useMemo(() => {
@@ -132,6 +144,18 @@ export function usePrivyWallet(): UsePrivyWallet {
       throw error;
     }
   }, [privyExportWallet]);
+
+  // Debug logging (remove in production)
+  if (process.env.NODE_ENV === 'development') {
+    console.log('🔍 Privy Debug:', {
+      authenticated,
+      ready,
+      embeddedWallet: !!embeddedWallet,
+      walletsCount: wallets.length,
+      address,
+      isConnected: authenticated && !!embeddedWallet
+    });
+  }
 
   return {
     isConnected: authenticated && !!embeddedWallet,

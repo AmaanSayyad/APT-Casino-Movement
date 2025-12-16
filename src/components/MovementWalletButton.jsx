@@ -18,10 +18,8 @@ export default function MovementWalletButton() {
 
   const [showWalletOptions, setShowWalletOptions] = useState(false);
 
-  // Hide if Privy wallet is connected (and Movement is not)
-  if (privyWallet.isConnected && !isConnected) {
-    return null;
-  }
+  // Always show Movement wallet button - users can have both Privy and Movement
+  // This allows Privy users to also connect Movement wallet for deposits/withdrawals
 
   const handleConnect = async (selectedWallet) => {
     try {
