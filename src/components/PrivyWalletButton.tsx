@@ -88,9 +88,13 @@ export default function PrivyWalletButton() {
               </button>
               
               <button
-                onClick={() => {
-                  logout();
+                onClick={async () => {
                   setShowMenu(false);
+                  try {
+                    await logout();
+                  } catch (error) {
+                    console.error('Disconnect error:', error);
+                  }
                 }}
                 className="w-full text-left px-3 py-2 text-sm text-red-400 hover:bg-red-500/20 rounded-md transition-colors flex items-center gap-2"
               >

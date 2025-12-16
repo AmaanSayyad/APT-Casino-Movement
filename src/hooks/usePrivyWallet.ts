@@ -86,22 +86,31 @@ export function usePrivyWallet(): UsePrivyWallet {
   // Login handler
   const login = useCallback(async () => {
     try {
+      // Check if already authenticated to avoid "already logged in" error
+      if (authenticated) {
+        console.log('✅ User already authenticated with Privy');
+        return;
+      }
       await privyLogin();
     } catch (error) {
       console.error('❌ Privy login failed:', error);
       throw error;
     }
-  }, [privyLogin]);
+  }, [privyLogin, authenticated]);
 
   // Logout handler
   const logout = useCallback(async () => {
     try {
+      if (!authenticated) {
+        console.log('✅ User already logged out from Privy');
+        return;
+      }
       await privyLogout();
     } catch (error) {
       console.error('❌ Privy logout failed:', error);
       throw error;
     }
-  }, [privyLogout]);
+  }, [privyLogout, authenticated]);
 
   // Sign message handler
   const signMessage = useCallback(async (message: string) => {
