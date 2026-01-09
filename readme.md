@@ -465,6 +465,22 @@ NEXT_PUBLIC_ARBITRUM_SEPOLIA_EXPLORER=https://sepolia.arbiscan.io
 NEXT_PUBLIC_NETWORK=movement-bardock-testnet
 ```
 
+### Deployed Contracts (Movement Bardock Testnet)
+
+| Contract | Address | Explorer Link | Description |
+|----------|---------|--------------|-------------|
+| **Treasury** | `0x65427119abb14cdab8fc71ea8d83aebd5ec36b8a1ac43db3bb9cf046c150c6ea` | [View on Explorer](https://explorer.movementnetwork.xyz/account/0x65427119abb14cdab8fc71ea8d83aebd5ec36b8a1ac43db3bb9cf046c150c6ea?network=bardock+testnet) | Treasury contract for deposits, withdrawals, and balance management |
+| **Game Logger** | `0x65427119abb14cdab8fc71ea8d83aebd5ec36b8a1ac43db3bb9cf046c150c6ea` | [View on Explorer](https://explorer.movementnetwork.xyz/account/0x65427119abb14cdab8fc71ea8d83aebd5ec36b8a1ac43db3bb9cf046c150c6ea?network=bardock+testnet) | On-chain game result logging and history |
+| **User Balance** | `0x65427119abb14cdab8fc71ea8d83aebd5ec36b8a1ac43db3bb9cf046c150c6ea` | [View on Explorer](https://explorer.movementnetwork.xyz/account/0x65427119abb14cdab8fc71ea8d83aebd5ec36b8a1ac43db3bb9cf046c150c6ea?network=bardock+testnet) | User balance tracking and management |
+| **Roulette Game** | `0x65427119abb14cdab8fc71ea8d83aebd5ec36b8a1ac43db3bb9cf046c150c6ea::roulette_game` | [View on Explorer](https://explorer.movementnetwork.xyz/account/0x65427119abb14cdab8fc71ea8d83aebd5ec36b8a1ac43db3bb9cf046c150c6ea?network=bardock+testnet) | Roulette game smart contract |
+| **Mines Game** | `0x65427119abb14cdab8fc71ea8d83aebd5ec36b8a1ac43db3bb9cf046c150c6ea::mines_game` | [View on Explorer](https://explorer.movementnetwork.xyz/account/0x65427119abb14cdab8fc71ea8d83aebd5ec36b8a1ac43db3bb9cf046c150c6ea?network=bardock+testnet) | Mines game smart contract |
+| **Plinko Game** | `0x65427119abb14cdab8fc71ea8d83aebd5ec36b8a1ac43db3bb9cf046c150c6ea::plinko_game` | [View on Explorer](https://explorer.movementnetwork.xyz/account/0x65427119abb14cdab8fc71ea8d83aebd5ec36b8a1ac43db3bb9cf046c150c6ea?network=bardock+testnet) | Plinko game smart contract |
+| **Wheel Game** | `0x65427119abb14cdab8fc71ea8d83aebd5ec36b8a1ac43db3bb9cf046c150c6ea::wheel_game` | [View on Explorer](https://explorer.movementnetwork.xyz/account/0x65427119abb14cdab8fc71ea8d83aebd5ec36b8a1ac43db3bb9cf046c150c6ea?network=bardock+testnet) | Spin Wheel game smart contract |
+
+**Main Contract Address:** `0x65427119abb14cdab8fc71ea8d83aebd5ec36b8a1ac43db3bb9cf046c150c6ea`
+
+**Movement Explorer:** [https://explorer.movementnetwork.xyz/?network=bardock+testnet](https://explorer.movementnetwork.xyz/?network=bardock+testnet)
+
 ### Environment Variable Reference
 
 | Variable | Required | Description | Where to Get |
