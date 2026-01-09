@@ -57,6 +57,7 @@ APT-Casino addresses these problems by offering:
 APT-Casino uses **Movement's Bardock Testnet** as the execution layer.
 
 ### Technical Architecture
+<img width="1585" height="733" alt="Screenshot 2026-01-10 at 12 56 39 AM" src="https://github.com/user-attachments/assets/25e23af1-1471-482e-8475-4ac9e301af84" />
 
 
 ### Complete System Overview
