@@ -69,9 +69,9 @@ const PartnersSection = () => {
                             />
                           </div>
                         ) : (
-                          <div className="w-12 h-12 rounded-full bg-white/10 flex items-center justify-center mb-2">
-                            <span className="text-white font-bold">{partner.name.charAt(0)}</span>
-                          </div>
+                        <div className="w-12 h-12 rounded-full bg-white/10 flex items-center justify-center mb-2">
+                          <span className="text-white font-bold">{partner.name.charAt(0)}</span>
+                        </div>
                         )}
                         <p className="text-white/80 text-xs text-center">{partner.name}</p>
                       </div>
