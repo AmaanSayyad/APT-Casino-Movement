@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { cn } from "../../lib/utils";
 import Image from "next/image";
-import coin from "../../../public/coin.png";
+import coin from "../../../public/movementlabsxyz_logo.jpeg";
 // import { wheelDataByRisk } from "./GameWheel"; // Make sure this is exported
 
 const BettingPanel = ({

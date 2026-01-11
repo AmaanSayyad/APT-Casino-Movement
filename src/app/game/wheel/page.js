@@ -6,7 +6,7 @@ import BettingPanel from "../../../components/wheel/BettingPanel";
 import GameHistory from "../../../components/wheel/GameHistory";
 import { calculateResult } from "../../../lib/gameLogic";
 import Image from "next/image";
-import coin from "../../../../public/coin.png";
+import coin from "../../../../public/movementlabsxyz_logo.jpeg";
 import { motion } from "framer-motion";
 import { FaHistory, FaTrophy, FaInfoCircle, FaChartLine, FaCoins, FaChevronDown, FaPercentage, FaBalanceScale } from "react-icons/fa";
 import { GiCardRandom, GiWheelbarrow, GiSpinningBlades, GiTrophyCup } from "react-icons/gi";

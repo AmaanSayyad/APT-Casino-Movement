@@ -4,7 +4,7 @@ import React, { useState } from "react";
 import { Box, Typography, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Button, TextField, InputAdornment, Select, MenuItem, FormControl, Chip, Pagination, Divider, Fade } from "@mui/material";
 import { FaHistory, FaFilter, FaDownload, FaSearch, FaTrophy, FaChartLine, FaExternalLinkAlt, FaCheck } from "react-icons/fa";
 import Image from "next/image";
-import coin from "../../../../../public/coin.png";
+import coin from "../../../../../public/movementlabsxyz_logo.jpeg";
 import MovementTxLink from "@/components/MovementTxLink";
 
 const WheelHistory = ({ gameHistory = [] }) => {
