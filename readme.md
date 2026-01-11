@@ -400,69 +400,84 @@ Then edit `.env.local` and fill in your actual values:
 
 ```env
 # ============================================
-# Movement Network Configuration
+# Supabase Configuration
 # ============================================
-# Network: Movement Bardock Testnet
-# Docs: https://developer.movementnetwork.xyz/
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key_here
+NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
 
-# Movement Network (bardock-testnet or mainnet)
-NEXT_PUBLIC_MOVEMENT_NETWORK=bardock-testnet
+# ============================================
+# WalletConnect Configuration
+# ============================================
+NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID=your_walletconnect_project_id_here
 
-# Movement Contract Addresses (deploy your contracts and update these)
+# ============================================
+# Privy Configuration
+# ============================================
+NEXT_PUBLIC_PRIVY_APP_ID=your_privy_app_id_here
+PRIVY_APP_SECRET=your_privy_app_secret_here
+
+# ============================================
+# Movement Bardock Testnet Configuration
+# ============================================
+NEXT_PUBLIC_MOVEMENT_RPC=https://testnet.movementnetwork.xyz/v1
+NEXT_PUBLIC_MOVEMENT_CHAIN_ID=250
+NEXT_PUBLIC_MOVEMENT_EXPLORER=https://explorer.movementnetwork.xyz/?network=bardock+testnet
+NEXT_PUBLIC_MOVEMENT_EXPLORER_TX=https://explorer.movementnetwork.xyz/txn
+NEXT_PUBLIC_MOVEMENT_FAUCET=https://faucet.movementnetwork.xyz
+NEXT_PUBLIC_MOVEMENT_INDEXER=https://hasura.testnet.movementnetwork.xyz/v1/graphql
+NEXT_PUBLIC_MOVEMENT_CURRENCY=MOVE
+NEXT_PUBLIC_MOVEMENT_CURRENCY_SYMBOL=MOVE
+NEXT_PUBLIC_MOVEMENT_CURRENCY_DECIMALS=8
+
+# ============================================
+# Movement Treasury and Contract Addresses
+# ============================================
 NEXT_PUBLIC_MOVEMENT_TREASURY_ADDRESS=0x0000000000000000000000000000000000000000000000000000000000000000
 NEXT_PUBLIC_MOVEMENT_GAME_LOGGER_ADDRESS=0x0000000000000000000000000000000000000000000000000000000000000000
 NEXT_PUBLIC_MOVEMENT_USER_BALANCE_ADDRESS=0x0000000000000000000000000000000000000000000000000000000000000000
 
-# Legacy Aptos config (for backward compatibility, can use Movement addresses)
-NEXT_PUBLIC_APTOS_NETWORK=testnet
-NEXT_PUBLIC_CASINO_MODULE_ADDRESS=0x0000000000000000000000000000000000000000000000000000000000000000
-NEXT_PUBLIC_TREASURY_ADDRESS=0x0000000000000000000000000000000000000000000000000000000000000000
+# ============================================
+# Game Contract Addresses
+# ============================================
+NEXT_PUBLIC_MOVEMENT_MINES_GAME_ADDRESS=0x0000000000000000000000000000000000000000000000000000000000000000
+NEXT_PUBLIC_MOVEMENT_WHEEL_GAME_ADDRESS=0x0000000000000000000000000000000000000000000000000000000000000000
+NEXT_PUBLIC_MOVEMENT_PLINKO_GAME_ADDRESS=0x0000000000000000000000000000000000000000000000000000000000000000
+NEXT_PUBLIC_MOVEMENT_ROULETTE_GAME_ADDRESS=0x0000000000000000000000000000000000000000000000000000000000000000
 
 # ============================================
-# Privy Wallet Integration
+# Game Contract Modules
 # ============================================
-# Get your App ID from: https://dashboard.privy.io/
-# Docs: https://docs.privy.io/guide/embedded-wallets
-NEXT_PUBLIC_PRIVY_APP_ID=your_privy_app_id_here
+NEXT_PUBLIC_MOVEMENT_MINES_GAME_MODULE=0x0000000000000000000000000000000000000000000000000000000000000000::mines_game
+NEXT_PUBLIC_MOVEMENT_WHEEL_GAME_MODULE=0x0000000000000000000000000000000000000000000000000000000000000000::wheel_game
+NEXT_PUBLIC_MOVEMENT_PLINKO_GAME_MODULE=0x0000000000000000000000000000000000000000000000000000000000000000::plinko_game
+NEXT_PUBLIC_MOVEMENT_ROULETTE_GAME_MODULE=0x0000000000000000000000000000000000000000000000000000000000000000::roulette_game
 
 # ============================================
-# Livepeer Streaming
+# Movement Network Configuration (Alternative Format)
 # ============================================
-# Get your API key from: https://livepeer.studio/dashboard
-# Optional: For live streaming features
-LIVEPEER_API_KEY=your_livepeer_api_key_here
-NEXT_PUBLIC_LIVEPEER_API_KEY=your_livepeer_api_key_here
+MOVEMENT_NETWORK=bardock-testnet
+MOVEMENT_RPC_URL=https://testnet.movementnetwork.xyz/v1
+MOVEMENT_CHAIN_ID=250
+MOVEMENT_EXPLORER_URL=https://explorer.movementnetwork.xyz/?network=bardock+testnet
 
 # ============================================
-# Supabase Integration
+# Legacy Contract Addresses (Alternative Format)
 # ============================================
-# Get your credentials from: https://supabase.com/dashboard
-# Optional: For chat, user profiles, and real-time features
-NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key_here
+TREASURY_ADDRESS=0x0000000000000000000000000000000000000000000000000000000000000000
+MINES_GAME_ADDRESS=0x0000000000000000000000000000000000000000000000000000000000000000
+WHEEL_GAME_ADDRESS=0x0000000000000000000000000000000000000000000000000000000000000000
+PLINKO_GAME_ADDRESS=0x0000000000000000000000000000000000000000000000000000000000000000
+ROULETTE_GAME_ADDRESS=0x0000000000000000000000000000000000000000000000000000000000000000
+MINES_GAME_MODULE=0x0000000000000000000000000000000000000000000000000000000000000000::mines_game
+WHEEL_GAME_MODULE=0x0000000000000000000000000000000000000000000000000000000000000000::wheel_game
+PLINKO_GAME_MODULE=0x0000000000000000000000000000000000000000000000000000000000000000::plinko_game
+ROULETTE_GAME_MODULE=0x0000000000000000000000000000000000000000000000000000000000000000::roulette_game
 
 # ============================================
 # Server-Side / Backend Only
 # ============================================
 # ⚠️ NEVER expose these in client-side code
-# These are used by API routes only
-
-# Treasury private key for game logging and withdrawals
-# Format: ed25519-priv-0x... or 0x... (64 hex chars)
 TREASURY_PRIVATE_KEY=ed25519-priv-0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-
-# Deployer private key for contract deployment scripts
-# Format: ed25519-priv-0x... or 0x... (64 hex chars)
-DEPLOYER_PRIVATE_KEY=ed25519-priv-0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-
-# ============================================
-# Optional / Legacy
-# ============================================
-# Arbitrum Sepolia Explorer (if using legacy features)
-NEXT_PUBLIC_ARBITRUM_SEPOLIA_EXPLORER=https://sepolia.arbiscan.io
-
-# Network identifier (legacy)
-NEXT_PUBLIC_NETWORK=movement-bardock-testnet
 ```
 
 ### Deployed Contracts (Movement Bardock Testnet)
@@ -483,18 +498,83 @@ NEXT_PUBLIC_NETWORK=movement-bardock-testnet
 
 ### Environment Variable Reference
 
+#### Movement Network Configuration
+
+| Variable | Required | Description | Where to Get |
+|----------|----------|-------------|--------------|
+| `NEXT_PUBLIC_MOVEMENT_RPC` | ✅ Yes | Movement RPC endpoint | Movement Network |
+| `NEXT_PUBLIC_MOVEMENT_CHAIN_ID` | ✅ Yes | Movement chain ID (250 for testnet) | Movement Network |
+| `NEXT_PUBLIC_MOVEMENT_EXPLORER` | ✅ Yes | Movement explorer URL | Movement Network |
+| `NEXT_PUBLIC_MOVEMENT_EXPLORER_TX` | ✅ Yes | Movement transaction explorer URL | Movement Network |
+| `NEXT_PUBLIC_MOVEMENT_FAUCET` | ✅ Yes | Movement faucet URL | Movement Network |
+| `NEXT_PUBLIC_MOVEMENT_INDEXER` | ✅ Yes | Movement GraphQL indexer URL | Movement Network |
+| `NEXT_PUBLIC_MOVEMENT_CURRENCY` | ✅ Yes | Currency name (MOVE) | Movement Network |
+| `NEXT_PUBLIC_MOVEMENT_CURRENCY_SYMBOL` | ✅ Yes | Currency symbol (MOVE) | Movement Network |
+| `NEXT_PUBLIC_MOVEMENT_CURRENCY_DECIMALS` | ✅ Yes | Currency decimals (8) | Movement Network |
+
+#### Contract Addresses
+
 | Variable | Required | Description | Where to Get |
 |----------|----------|-------------|--------------|
 | `NEXT_PUBLIC_MOVEMENT_TREASURY_ADDRESS` | ✅ Yes | Treasury address for deposits/withdrawals | Deploy contracts |
 | `NEXT_PUBLIC_MOVEMENT_GAME_LOGGER_ADDRESS` | ✅ Yes | Game logger contract address | Deploy contracts |
 | `NEXT_PUBLIC_MOVEMENT_USER_BALANCE_ADDRESS` | ✅ Yes | User balance contract address | Deploy contracts |
-| `TREASURY_PRIVATE_KEY` | ✅ Yes | Private key for treasury (server-side only) | Generate wallet |
-| `NEXT_PUBLIC_PRIVY_APP_ID` | ⚠️ Optional | Privy embedded wallet App ID | [Privy Dashboard](https://dashboard.privy.io/) |
-| `LIVEPEER_API_KEY` | ⚠️ Optional | Livepeer API key for streaming | [Livepeer Studio](https://livepeer.studio/dashboard) |
+| `NEXT_PUBLIC_MOVEMENT_MINES_GAME_ADDRESS` | ✅ Yes | Mines game contract address | Deploy contracts |
+| `NEXT_PUBLIC_MOVEMENT_WHEEL_GAME_ADDRESS` | ✅ Yes | Wheel game contract address | Deploy contracts |
+| `NEXT_PUBLIC_MOVEMENT_PLINKO_GAME_ADDRESS` | ✅ Yes | Plinko game contract address | Deploy contracts |
+| `NEXT_PUBLIC_MOVEMENT_ROULETTE_GAME_ADDRESS` | ✅ Yes | Roulette game contract address | Deploy contracts |
+| `NEXT_PUBLIC_MOVEMENT_MINES_GAME_MODULE` | ✅ Yes | Mines game module (ADDRESS::mines_game) | Deploy contracts |
+| `NEXT_PUBLIC_MOVEMENT_WHEEL_GAME_MODULE` | ✅ Yes | Wheel game module (ADDRESS::wheel_game) | Deploy contracts |
+| `NEXT_PUBLIC_MOVEMENT_PLINKO_GAME_MODULE` | ✅ Yes | Plinko game module (ADDRESS::plinko_game) | Deploy contracts |
+| `NEXT_PUBLIC_MOVEMENT_ROULETTE_GAME_MODULE` | ✅ Yes | Roulette game module (ADDRESS::roulette_game) | Deploy contracts |
+
+#### Privy Wallet Integration
+
+| Variable | Required | Description | Where to Get |
+|----------|----------|-------------|--------------|
+| `NEXT_PUBLIC_PRIVY_APP_ID` | ✅ Yes | Privy embedded wallet App ID | [Privy Dashboard](https://dashboard.privy.io/) |
+| `PRIVY_APP_SECRET` | ✅ Yes | Privy app secret (server-side only) | [Privy Dashboard](https://dashboard.privy.io/) |
+
+#### Supabase Integration
+
+| Variable | Required | Description | Where to Get |
+|----------|----------|-------------|--------------|
 | `NEXT_PUBLIC_SUPABASE_URL` | ⚠️ Optional | Supabase project URL | [Supabase Dashboard](https://supabase.com/dashboard) |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | ⚠️ Optional | Supabase anonymous key | [Supabase Dashboard](https://supabase.com/dashboard) |
 
-> **Security Note:** Never commit `.env.local` to git. The `TREASURY_PRIVATE_KEY` and `DEPLOYER_PRIVATE_KEY` are server-side only and should never be exposed to the client.
+#### WalletConnect Integration
+
+| Variable | Required | Description | Where to Get |
+|----------|----------|-------------|--------------|
+| `NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID` | ⚠️ Optional | WalletConnect project ID | [WalletConnect Cloud](https://cloud.walletconnect.com/) |
+
+#### Server-Side Only (⚠️ Never expose to client)
+
+| Variable | Required | Description | Where to Get |
+|----------|----------|-------------|--------------|
+| `TREASURY_PRIVATE_KEY` | ✅ Yes | Private key for treasury (server-side only) | Generate wallet |
+
+#### Alternative Variable Names (Used by scripts)
+
+These are alternative variable names used by deployment scripts:
+
+| Variable | Description |
+|----------|-------------|
+| `MOVEMENT_NETWORK` | Network name (bardock-testnet) |
+| `MOVEMENT_RPC_URL` | RPC URL (alternative format) |
+| `MOVEMENT_CHAIN_ID` | Chain ID (alternative format) |
+| `MOVEMENT_EXPLORER_URL` | Explorer URL (alternative format) |
+| `TREASURY_ADDRESS` | Treasury address (alternative format) |
+| `MINES_GAME_ADDRESS` | Mines game address (alternative format) |
+| `WHEEL_GAME_ADDRESS` | Wheel game address (alternative format) |
+| `PLINKO_GAME_ADDRESS` | Plinko game address (alternative format) |
+| `ROULETTE_GAME_ADDRESS` | Roulette game address (alternative format) |
+| `MINES_GAME_MODULE` | Mines game module (alternative format) |
+| `WHEEL_GAME_MODULE` | Wheel game module (alternative format) |
+| `PLINKO_GAME_MODULE` | Plinko game module (alternative format) |
+| `ROULETTE_GAME_MODULE` | Roulette game module (alternative format) |
+
+> **Security Note:** Never commit `.env.local` to git. The `TREASURY_PRIVATE_KEY` and `PRIVY_APP_SECRET` are server-side only and should never be exposed to the client.
 
 ---
 
