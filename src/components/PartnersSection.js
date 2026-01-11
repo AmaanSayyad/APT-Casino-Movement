@@ -6,8 +6,8 @@ const PartnersSection = () => {
     {
       category: 'Blockchain',
       items: [
-        { id: 1, name: 'Movement', logo: '/images/partners/movement.svg' },
-        { id: 2, name: 'Movement Labs', logo: '/images/partners/movement.svg' },
+        { id: 1, name: 'Movement', logo: '/movementlabsxyz_logo.jpeg' },
+        { id: 2, name: 'Movement Labs', logo: '/movementlabsxyz_logo.jpeg' },
       ]
     },
     {
@@ -58,10 +58,21 @@ const PartnersSection = () => {
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
                     {category.items.map((partner) => (
                       <div key={partner.id} className="bg-[#250020] rounded-lg p-4 flex flex-col items-center justify-center h-24 transition-transform hover:scale-105 hover:bg-[#300030]">
-                        {/* This would be replaced with actual logos in production */}
-                        <div className="w-12 h-12 rounded-full bg-white/10 flex items-center justify-center mb-2">
-                          <span className="text-white font-bold">{partner.name.charAt(0)}</span>
-                        </div>
+                        {partner.logo ? (
+                          <div className="w-12 h-12 rounded-full bg-white/10 flex items-center justify-center mb-2 overflow-hidden">
+                            <Image 
+                              src={partner.logo} 
+                              alt={partner.name} 
+                              width={48} 
+                              height={48}
+                              className="object-contain"
+                            />
+                          </div>
+                        ) : (
+                          <div className="w-12 h-12 rounded-full bg-white/10 flex items-center justify-center mb-2">
+                            <span className="text-white font-bold">{partner.name.charAt(0)}</span>
+                          </div>
+                        )}
                         <p className="text-white/80 text-xs text-center">{partner.name}</p>
                       </div>
                     ))}

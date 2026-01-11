@@ -390,6 +390,8 @@ The app will be available at `http://localhost:3000`.
 
 ## Environment Variables
 
+### Main Environment File
+
 Create a `.env.local` file in the project root by copying `.env.example`:
 
 ```bash
@@ -397,6 +399,8 @@ cp .env.example .env.local
 ```
 
 Then edit `.env.local` and fill in your actual values:
+
+> **Note:** Some deployment scripts may also use `.env.game-contracts` for the alternative variable format. You can create this file by copying `.env.game-contracts.example` if needed.
 
 ```env
 # ============================================

@@ -31,7 +31,7 @@ export const PrivyWalletProvider = ({ children }: PropsWithChildren) => {
         appearance: {
           theme: "dark",
           accentColor: "#8B5CF6", // Purple to match casino theme
-          logo: "/logo.png",
+          logo: "/movementlabsxyz_logo.jpeg",
         },
         // Login methods
         loginMethods: ["email", "google", "twitter", "discord", "wallet"],

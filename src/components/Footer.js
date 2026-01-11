@@ -27,8 +27,8 @@ export default function Footer() {
   ];
   
   const paymentMethods = [
-    { name: "MOVE", icon: "/icons/apt.svg" },
-    { name: "MOVE", icon: "/icons/apt.svg" },
+    { name: "MOVE", icon: "/movementlabsxyz_logo.jpeg" },
+    { name: "MOVE", icon: "/movementlabsxyz_logo.jpeg" },
   ];
   
   const handleSubscribe = (e) => {
